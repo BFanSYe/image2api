@@ -102,6 +102,11 @@ services:
       KLEIN_NODE_ID: '1'
     ports:
       - "127.0.0.1:17180:17180"
+    healthcheck:
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17180"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     volumes:
       - klein-logs:/app/logs
     depends_on:
@@ -120,6 +125,11 @@ services:
       KLEIN_NODE_ID: '2'
     ports:
       - "127.0.0.1:17188:17188"
+    healthcheck:
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17188"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     volumes:
       - klein-logs:/app/logs
     depends_on:
@@ -137,6 +147,11 @@ services:
       KLEIN_NODE_ID: '3'
     ports:
       - "127.0.0.1:17200:17200"
+    healthcheck:
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17200"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     volumes:
       - klein-logs:/app/logs
     depends_on:

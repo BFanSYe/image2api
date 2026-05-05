@@ -289,6 +289,19 @@ export default function CreateStudioPage() {
     return [...current, ...rest].filter((item, idx, arr) => arr.findIndex((x) => x.task_id === item.task_id) === idx);
   }, [history.data?.list, task]);
 
+  const resultCards = useMemo(() => {
+    return resultItems.flatMap((item) => {
+      if (item.status === 2 && item.results?.length) {
+        return item.results.map((_, resultIndex) => ({
+          item,
+          resultIndex,
+          key: `${item.task_id}:${resultIndex}`,
+        }));
+      }
+      return [{ item, resultIndex: 0, key: item.task_id }];
+    });
+  }, [resultItems]);
+
   const expectedCost = mode === 'video'
     ? Math.round(((videoModels.find((m) => m.code === videoModel)?.cost ?? 20) * duration) / 6)
     : mode === 'text'
@@ -537,7 +550,7 @@ export default function CreateStudioPage() {
             className="mx-auto max-w-[1500px] columns-1 gap-3 sm:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5"
             style={{ columnWidth: '220px' }}
           >
-            {resultItems.map((item) => <WorkCard key={item.task_id} item={item} onOpen={setPreview} />)}
+            {resultCards.map(({ item, resultIndex, key }) => <WorkCard key={key} item={item} resultIndex={resultIndex} onOpen={setPreview} />)}
           </div>
         )}
       </section>
@@ -697,8 +710,8 @@ function HistoryActionMenu({
   );
 }
 
-function WorkCard({ item, onOpen }: { item: GenerationTask; onOpen: (preview: { url: string; type: 'image' | 'video'; title: string }) => void }) {
-  const result = item.results?.[0];
+function WorkCard({ item, resultIndex = 0, onOpen }: { item: GenerationTask; resultIndex?: number; onOpen: (preview: { url: string; type: 'image' | 'video'; title: string }) => void }) {
+  const result = item.results?.[resultIndex];
   const thumb = result?.thumb_url;
   const original = result?.url;
   const [thumbFailed, setThumbFailed] = useState(false);
@@ -725,7 +738,7 @@ function WorkCard({ item, onOpen }: { item: GenerationTask; onOpen: (preview: { 
       <button
         type="button"
         disabled={!canOpen}
-        onClick={() => original && onOpen({ url: original, type: isVideo ? 'video' : 'image', title: item.model })}
+        onClick={() => original && onOpen({ url: original, type: isVideo ? 'video' : 'image', title: item.results && item.results.length > 1 ? `${item.model} #${resultIndex + 1}` : item.model })}
         style={{ aspectRatio: mediaRatio }}
         className={clsx(
           'relative grid w-full place-items-center overflow-hidden text-neutral-400 transition-[height]',

@@ -81,8 +81,9 @@ services:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:17180/healthz | grep -q ok || exit 1"]
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17180"]
       interval: 15s
+      timeout: 5s
       retries: 5
     deploy:
       resources:
@@ -103,6 +104,11 @@ services:
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17188"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits: { cpus: '1', memory: 512M }
@@ -122,6 +128,11 @@ services:
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17200"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits: { cpus: '2', memory: 1G }

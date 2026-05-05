@@ -14,7 +14,7 @@ RUN pnpm install --frozen-lockfile=false
 RUN pnpm --filter @kleinai/admin build
 
 FROM nginx:1.27-alpine AS runtime
-COPY --from=build /repo/apps/admin/dist /usr/share/nginx/html
+COPY --from=build /repo/apps/admin/dist /usr/share/nginx/html/admin
 COPY apps/admin/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

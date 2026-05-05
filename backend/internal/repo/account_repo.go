@@ -49,6 +49,15 @@ type AccountListFilter struct {
 	PageSize int
 }
 
+// CountEnabledByProvider 统计指定 provider 下已启用且未删除的账号数。
+func (r *AccountRepo) CountEnabledByProvider(ctx context.Context, provider string) (int64, error) {
+	var total int64
+	err := r.db.WithContext(ctx).Model(&model.Account{}).
+		Where("provider = ? AND deleted_at IS NULL AND status = ?", provider, model.AccountStatusEnabled).
+		Count(&total).Error
+	return total, err
+}
+
 // List 分页列表。
 func (r *AccountRepo) List(ctx context.Context, f AccountListFilter) ([]*model.Account, int64, error) {
 	if f.Page <= 0 {

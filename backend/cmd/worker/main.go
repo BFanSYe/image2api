@@ -44,7 +44,8 @@ func main() {
 	if deps.DB != nil {
 		sysCfgSvc := service.NewSystemConfigService(repo.NewSystemConfigRepo(deps.DB))
 		proxySvc := service.NewProxyService(repo.NewProxyRepo(deps.DB), deps.AES)
-		service.NewGrokCFRefreshService(sysCfgSvc, proxySvc).Start(context.Background())
+		accountRepo := repo.NewAccountRepo(deps.DB)
+		service.NewGrokCFRefreshService(sysCfgSvc, proxySvc, accountRepo).Start(context.Background())
 	}
 
 	srv := asynq.NewServer(

@@ -15,15 +15,17 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/kleinai/backend/internal/model"
+	"github.com/kleinai/backend/internal/repo"
 	"github.com/kleinai/backend/pkg/logger"
 )
 
 const defaultGrokCFStatePath = "/app/storage/grok_cf.json"
 
 type GrokCFRefreshService struct {
-	cfg      *SystemConfigService
-	proxySvc *ProxyService
-	client   *http.Client
+	cfg         *SystemConfigService
+	proxySvc    *ProxyService
+	accountRepo *repo.AccountRepo
+	client      *http.Client
 }
 
 type grokCFState struct {
@@ -35,11 +37,16 @@ type grokCFState struct {
 	UpdatedAt   int64  `json:"updated_at"`
 }
 
-func NewGrokCFRefreshService(cfg *SystemConfigService, proxySvc *ProxyService) *GrokCFRefreshService {
+func NewGrokCFRefreshService(cfg *SystemConfigService, proxySvc *ProxyService, accountRepos ...*repo.AccountRepo) *GrokCFRefreshService {
+	var accountRepo *repo.AccountRepo
+	if len(accountRepos) > 0 {
+		accountRepo = accountRepos[0]
+	}
 	return &GrokCFRefreshService{
-		cfg:      cfg,
-		proxySvc: proxySvc,
-		client:   &http.Client{Timeout: 5 * time.Minute},
+		cfg:         cfg,
+		proxySvc:    proxySvc,
+		accountRepo: accountRepo,
+		client:      &http.Client{Timeout: 5 * time.Minute},
 	}
 }
 
@@ -67,6 +74,13 @@ func (s *GrokCFRefreshService) loop(ctx context.Context) {
 
 func (s *GrokCFRefreshService) refreshOnce(parent context.Context) {
 	if !s.cfg.GrokCFEnabled(parent) {
+		return
+	}
+	if ok, err := s.hasEnabledGrokAccounts(parent); err != nil {
+		s.recordError(parent, fmt.Sprintf("count enabled grok accounts: %v", err))
+		return
+	} else if !ok {
+		logger.L().Debug("skip grok cf refresh: no enabled grok accounts")
 		return
 	}
 	solverURL := s.cfg.GrokCFSolverURL(parent)
@@ -108,6 +122,17 @@ func (s *GrokCFRefreshService) refreshOnce(parent context.Context) {
 		zap.Bool("has_proxy", state.ProxyURL != ""),
 		zap.String("browser", state.Browser),
 	)
+}
+
+func (s *GrokCFRefreshService) hasEnabledGrokAccounts(ctx context.Context) (bool, error) {
+	if s.accountRepo == nil {
+		return true, nil
+	}
+	total, err := s.accountRepo.CountEnabledByProvider(ctx, model.ProviderGROK)
+	if err != nil {
+		return false, err
+	}
+	return total > 0, nil
 }
 
 func (s *GrokCFRefreshService) globalProxyURL(ctx context.Context) (string, error) {

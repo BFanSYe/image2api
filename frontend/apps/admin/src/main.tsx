@@ -21,14 +21,14 @@ setUnauthorizedHandler(() => {
   useAuthStore.getState().logout();
   toast.error('登录已过期，请重新登录');
   if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/login')) {
-    window.location.href = '/login';
+    window.location.href = '/admin/login';
   }
 });
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <QueryClientProvider client={qc}>
-      <BrowserRouter>
+      <BrowserRouter basename="/admin">
         <App />
       </BrowserRouter>
     </QueryClientProvider>

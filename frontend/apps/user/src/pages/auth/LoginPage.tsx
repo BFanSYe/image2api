@@ -85,7 +85,7 @@ export default function LoginPage() {
             <input type="checkbox" className="checkbox" {...register('remember')} />
             记住我
           </label>
-          <Link to="/forgot" className="text-klein-500 hover:underline">忘记密码?</Link>
+          <span className="text-text-tertiary">忘记密码请联系管理员</span>
         </div>
 
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={isSubmitting}>

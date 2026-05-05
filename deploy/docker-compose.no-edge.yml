@@ -1,0 +1,19 @@
+services:
+  edge:
+    profiles: [disabled]
+  api:
+    environment: &prod-env
+      KLEIN_ENV: prod
+      GIN_MODE: release
+  admin:
+    environment: *prod-env
+  openai:
+    environment: *prod-env
+  worker:
+    environment: *prod-env
+  user-web:
+    ports: !override
+      - "127.0.0.1:17080:80"
+  admin-web:
+    ports: !override
+      - "127.0.0.1:17088:80"

@@ -3,8 +3,10 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -177,24 +179,8 @@ func loadInternal() (*Config, error) {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
 
-	mapEnv := func(target *string, key string) {
-		if val := os.Getenv(key); val != "" {
-			*target = val
-		}
-	}
-	mapEnv(&out.MySQL.DSN, "KLEIN_DB_DSN")
-	mapEnv(&out.Redis.Addr, "KLEIN_REDIS_ADDR")
-	mapEnv(&out.Redis.Password, "KLEIN_REDIS_PASSWORD")
-	mapEnv(&out.JWT.Secret, "KLEIN_JWT_SECRET")
-	mapEnv(&out.JWT.RefreshSecret, "KLEIN_JWT_REFRESH_SECRET")
-	mapEnv(&out.AESKey, "KLEIN_AES_KEY")
-	mapEnv(&out.Provider.OpenAIBase, "KLEIN_OPENAI_BASE")
-	mapEnv(&out.Provider.GrokBase, "KLEIN_GROK_BASE")
-	mapEnv(&out.Logger.Dir, "KLEIN_LOG_DIR")
-	mapEnv(&out.Logger.Level, "KLEIN_LOG_LEVEL")
-
-	if origins := os.Getenv("KLEIN_CORS_ORIGINS"); origins != "" {
-		out.CORS.Origins = splitAndTrim(origins, ",")
+	if err := applyEnvOverrides(out); err != nil {
+		return nil, err
 	}
 
 	if env == "prod" {
@@ -223,6 +209,140 @@ func validateProd(c *Config) error {
 	return nil
 }
 
+func applyEnvOverrides(out *Config) error {
+	mapString := func(target *string, key string) {
+		if val, ok := os.LookupEnv(key); ok && val != "" {
+			*target = val
+		}
+	}
+	mapInt := func(target *int, key string) error {
+		val, ok := os.LookupEnv(key)
+		if !ok || strings.TrimSpace(val) == "" {
+			return nil
+		}
+		n, err := strconv.Atoi(strings.TrimSpace(val))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", key, err)
+		}
+		*target = n
+		return nil
+	}
+	mapInt64 := func(target *int64, key string) error {
+		val, ok := os.LookupEnv(key)
+		if !ok || strings.TrimSpace(val) == "" {
+			return nil
+		}
+		n, err := strconv.ParseInt(strings.TrimSpace(val), 10, 64)
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", key, err)
+		}
+		*target = n
+		return nil
+	}
+	mapBool := func(target *bool, key string) error {
+		val, ok := os.LookupEnv(key)
+		if !ok || strings.TrimSpace(val) == "" {
+			return nil
+		}
+		b, err := strconv.ParseBool(strings.TrimSpace(val))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", key, err)
+		}
+		*target = b
+		return nil
+	}
+	mapDuration := func(target *time.Duration, key string) error {
+		val, ok := os.LookupEnv(key)
+		if !ok || strings.TrimSpace(val) == "" {
+			return nil
+		}
+		d, err := time.ParseDuration(strings.TrimSpace(val))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", key, err)
+		}
+		*target = d
+		return nil
+	}
+
+	mapString(&out.App.Name, "KLEIN_APP_NAME")
+	mapString(&out.MySQL.DSN, "KLEIN_DB_DSN")
+	mapString(&out.Redis.Addr, "KLEIN_REDIS_ADDR")
+	mapString(&out.Redis.Password, "KLEIN_REDIS_PASSWORD")
+	mapString(&out.JWT.Secret, "KLEIN_JWT_SECRET")
+	mapString(&out.JWT.RefreshSecret, "KLEIN_JWT_REFRESH_SECRET")
+	mapString(&out.AESKey, "KLEIN_AES_KEY")
+	mapString(&out.Provider.OpenAIBase, "KLEIN_OPENAI_BASE")
+	mapString(&out.Provider.GrokBase, "KLEIN_GROK_BASE")
+	mapString(&out.Logger.Dir, "KLEIN_LOG_DIR")
+	mapString(&out.Logger.Level, "KLEIN_LOG_LEVEL")
+	mapString(&out.CDN.Base, "KLEIN_CDN_BASE")
+
+	for _, item := range []struct {
+		target *int
+		key    string
+	}{
+		{&out.Server.APIPort, "KLEIN_API_PORT"},
+		{&out.Server.AdminPort, "KLEIN_ADMIN_PORT"},
+		{&out.Server.OpenAIPort, "KLEIN_OPENAI_PORT"},
+		{&out.Server.WSPort, "KLEIN_WS_PORT"},
+		{&out.Server.PprofPort, "KLEIN_PPROF_PORT"},
+		{&out.MySQL.MaxOpenConns, "KLEIN_MYSQL_MAX_OPEN_CONNS"},
+		{&out.MySQL.MaxIdleConns, "KLEIN_MYSQL_MAX_IDLE_CONNS"},
+		{&out.Redis.DB, "KLEIN_REDIS_DB"},
+		{&out.Redis.PoolSize, "KLEIN_REDIS_POOL_SIZE"},
+		{&out.Logger.MaxSizeMB, "KLEIN_LOG_MAX_SIZE_MB"},
+		{&out.Logger.MaxAgeDays, "KLEIN_LOG_MAX_AGE_DAYS"},
+		{&out.RateLimit.IPPerMinute, "KLEIN_RATELIMIT_IP_PER_MINUTE"},
+		{&out.RateLimit.UserPerMinute, "KLEIN_RATELIMIT_USER_PER_MINUTE"},
+		{&out.RateLimit.APIKeyPerMinute, "KLEIN_RATELIMIT_APIKEY_PER_MINUTE"},
+		{&out.Pool.CooldownSeconds, "KLEIN_POOL_COOLDOWN_SECONDS"},
+		{&out.Pool.FailThreshold, "KLEIN_POOL_FAIL_THRESHOLD"},
+		{&out.Pool.HealthCheckSeconds, "KLEIN_POOL_HEALTH_CHECK_SECONDS"},
+		{&out.Provider.Retry, "KLEIN_PROVIDER_RETRY"},
+	} {
+		if err := mapInt(item.target, item.key); err != nil {
+			return err
+		}
+	}
+
+	for _, item := range []struct {
+		target *time.Duration
+		key    string
+	}{
+		{&out.Server.ReadTimeout, "KLEIN_READ_TIMEOUT"},
+		{&out.Server.WriteTimeout, "KLEIN_WRITE_TIMEOUT"},
+		{&out.Server.ShutdownTimeout, "KLEIN_SHUTDOWN_TIMEOUT"},
+		{&out.MySQL.ConnMaxLifetime, "KLEIN_MYSQL_CONN_MAX_LIFETIME"},
+		{&out.MySQL.SlowThreshold, "KLEIN_MYSQL_SLOW_THRESHOLD"},
+		{&out.JWT.AccessTTL, "KLEIN_JWT_ACCESS_TTL"},
+		{&out.JWT.RefreshTTL, "KLEIN_JWT_REFRESH_TTL"},
+		{&out.Provider.RequestTimeout, "KLEIN_PROVIDER_REQUEST_TIMEOUT"},
+	} {
+		if err := mapDuration(item.target, item.key); err != nil {
+			return err
+		}
+	}
+
+	if err := mapInt64(&out.Snowflake.NodeID, "KLEIN_NODE_ID"); err != nil {
+		return err
+	}
+	if err := mapInt64(&out.Billing.PointUnit, "KLEIN_BILLING_POINT_UNIT"); err != nil {
+		return err
+	}
+	if err := mapBool(&out.Logger.Compress, "KLEIN_LOG_COMPRESS"); err != nil {
+		return err
+	}
+	if err := mapBool(&out.Logger.Console, "KLEIN_LOG_CONSOLE"); err != nil {
+		return err
+	}
+	mapString(&out.Pool.Strategy, "KLEIN_POOL_STRATEGY")
+
+	if origins := os.Getenv("KLEIN_CORS_ORIGINS"); origins != "" {
+		out.CORS.Origins = splitAndTrim(origins, ",")
+	}
+	return nil
+}
+
 func splitAndTrim(s, sep string) []string {
 	parts := strings.Split(s, sep)
 	out := make([]string, 0, len(parts))
@@ -236,11 +356,7 @@ func splitAndTrim(s, sep string) []string {
 
 // asErr 是 errors.As 的薄包装，避免 import cycle。
 func asErr(err error, target any) bool {
-	type asInterface interface{ As(any) bool }
-	if a, ok := err.(asInterface); ok && a.As(target) {
-		return true
-	}
-	return false
+	return errors.As(err, target)
 }
 
 // IsProd 判断是否生产环境。

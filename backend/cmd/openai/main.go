@@ -30,9 +30,8 @@ func main() {
 		Addr:         ":" + strconv.Itoa(deps.Cfg.Server.OpenAIPort),
 		Handler:      r,
 		ReadTimeout:  deps.Cfg.Server.ReadTimeout,
-		WriteTimeout: 600, // 视频生成长任务，下方再覆盖
+		WriteTimeout: deps.Cfg.Server.WriteTimeout * 10,
 	}
-	srv.WriteTimeout = deps.Cfg.Server.WriteTimeout * 10
 
 	if err := bootstrap.Run(srv, deps.Cfg.Server.ShutdownTimeout); err != nil {
 		fmt.Println("server exit error:", err)

@@ -5,9 +5,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/kleinai/backend/internal/bootstrap"
 	"github.com/kleinai/backend/internal/router"
@@ -17,6 +22,10 @@ import (
 const serviceName = "api"
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
+		os.Exit(runHealthcheck(os.Args[2:]))
+	}
+
 	deps, err := bootstrap.Init(serviceName)
 	if err != nil {
 		panic(err)
@@ -36,4 +45,40 @@ func main() {
 	if err := bootstrap.Run(srv, deps.Cfg.Server.ShutdownTimeout); err != nil {
 		fmt.Println("server exit error:", err)
 	}
+}
+
+func runHealthcheck(args []string) int {
+	fs := flag.NewFlagSet("healthcheck", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	addr := fs.String("addr", "127.0.0.1:17180", "HTTP listen address")
+	path := fs.String("path", "/readyz", "health endpoint path")
+	timeout := fs.Duration("timeout", 3*time.Second, "request timeout")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
+	}
+
+	url := strings.TrimSpace(*addr)
+	if url == "" {
+		fmt.Fprintln(os.Stderr, "empty healthcheck addr")
+		return 2
+	}
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		url = "http://" + url
+	}
+	endpoint := strings.TrimRight(url, "/") + "/" + strings.TrimLeft(*path, "/")
+
+	client := &http.Client{Timeout: *timeout}
+	resp, err := client.Get(endpoint)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		fmt.Fprintf(os.Stderr, "healthcheck returned HTTP %d\n", resp.StatusCode)
+		return 1
+	}
+	return 0
 }

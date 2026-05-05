@@ -1,22 +1,20 @@
 # =====================================================
-# KleinAI · 全容器本地开发栈
-#
-# 与 docker-compose.dev.yml 的差别：
-#   - dev.yml         只起 mysql + redis，业务进程主机直跑（go run / pnpm dev）
-#   - dev-full.yml    全部 7 个服务都跑容器（适合不想装 Go / Node 的同学）
+# KleinAI · 单机服务器容器栈（真实 provider）
 #
 # 启动：
 #   cd deploy
-#   docker compose -f docker-compose.dev-full.yml up -d --build
+#   docker compose -f docker-compose.server.yml -f docker-compose.no-edge.yml up -d --build
 #
 # 端口（host -> container）：
-#   user-web    : 17080 -> 80     (→ 静态前端 + /api/* 代理 api:17180 + /v1/* 代理 openai:17200)
-#   admin-web   : 17088 -> 80     (→ 静态前端 + /admin/api/* 代理 admin:17188)
-#   api         : 17180 -> 17180  (可选直连用户 API，调试用)
-#   admin       : 17188 -> 17188  (可选直连后台 API，调试用)
-#   openai      : 17200 -> 17200  (可选直连 OpenAI 兼容 API)
-#   mysql       : 23306 -> 3306   (Hyper-V 占了 13306，临时换 23306)
-#   redis       : 16379 -> 6379
+#   user-web    : 127.0.0.1:17080 -> 80
+#   admin-web   : 127.0.0.1:17088 -> 80
+#   api         : 127.0.0.1:17180 -> 17180
+#   admin       : 127.0.0.1:17188 -> 17188
+#   openai      : 127.0.0.1:17200 -> 17200
+#   mysql       : 127.0.0.1:23306 -> 3306
+#   redis       : 127.0.0.1:16379 -> 6379
+#
+# 注意：本文件默认使用 real provider，不是 mock 开发栈。
 # =====================================================
 
 x-backend-env: &backend-env
@@ -118,6 +116,11 @@ services:
       KLEIN_NODE_ID: '1'
     ports:
       - "127.0.0.1:17180:17180"
+    healthcheck:
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17180"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     volumes:
       - klein-logs:/app/logs
       - klein-storage:/app/storage
@@ -138,6 +141,11 @@ services:
       KLEIN_NODE_ID: '2'
     ports:
       - "127.0.0.1:17188:17188"
+    healthcheck:
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17188"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     volumes:
       - klein-logs:/app/logs
       - klein-storage:/app/storage
@@ -156,6 +164,11 @@ services:
       KLEIN_NODE_ID: '3'
     ports:
       - "127.0.0.1:17200:17200"
+    healthcheck:
+      test: ["CMD", "/app/api", "healthcheck", "-addr", "127.0.0.1:17200"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     volumes:
       - klein-logs:/app/logs
       - klein-storage:/app/storage
