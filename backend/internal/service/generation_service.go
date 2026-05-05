@@ -97,6 +97,9 @@ func (s *GenerationService) Create(ctx context.Context, req CreateRequest) (*mod
 	if existing, err := s.repo.GetByIdem(ctx, req.UserID, req.IdemKey); err == nil && existing != nil {
 		return existing, nil
 	}
+	if err := validateGenerationCreateRequest(req); err != nil {
+		return nil, err
+	}
 
 	cost := int64(0)
 	if s.priceFn != nil {
@@ -435,6 +438,38 @@ func accountRequiresCodexRoute(t *model.GenerationTask, params map[string]any) b
 		return false
 	}
 	return !shouldUseGPTWebRoute(params)
+}
+
+func validateGenerationCreateRequest(req CreateRequest) error {
+	if req.Kind != provider.KindImage || req.Provider != model.ProviderGPT || !strings.EqualFold(req.ModelCode, "gpt-image-2") {
+		return nil
+	}
+	tier := strings.ToUpper(strings.TrimSpace(strParamAny(req.Params, "resolution", strParamAny(req.Params, "size_tier", ""))))
+	if tier != "" && tier != "1K" && tier != "1" {
+		return errcode.InvalidParam.WithMsg("当前 GPT Image 2 只开放 1K 生图, 2K/4K 暂未接入稳定放大链路")
+	}
+	if size := strings.TrimSpace(strParamAny(req.Params, "size", "")); size != "" && !isGPTImage2SupportedSize(size) {
+		return errcode.InvalidParam.WithMsg("当前 GPT Image 2 只开放 1K 尺寸, 请改用 1K 规格")
+	}
+	return nil
+}
+
+func isGPTImage2SupportedSize(size string) bool {
+	switch strings.TrimSpace(size) {
+	case "1024x1024",
+		"1216x832",
+		"832x1216",
+		"1152x864",
+		"864x1152",
+		"1120x896",
+		"896x1120",
+		"1344x768",
+		"768x1344",
+		"1536x640":
+		return true
+	default:
+		return false
+	}
 }
 
 func shouldUseGPTWebRoute(params map[string]any) bool {

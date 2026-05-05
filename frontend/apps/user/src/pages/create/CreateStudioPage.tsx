@@ -55,6 +55,7 @@ type SelectModel = {
   cost?: number;
   input?: number;
   output?: number;
+  meta?: PublicModel['meta'];
 };
 
 const VIDEO_MODELS = [
@@ -71,7 +72,7 @@ const TEXT_MODELS = [
 ];
 
 const IMAGE_RATIOS = ['1:1', '3:2', '2:3', '4:3', '3:4', '5:4', '4:5', '16:9', '9:16', '21:9'] as const;
-const IMAGE_RESOLUTIONS = ['1K', '2K', '4K'] as const;
+const IMAGE_RESOLUTIONS = ['1K'] as const;
 const VIDEO_RATIOS = ['16:9', '9:16', '1:1'] as const;
 const VIDEO_DURATIONS = [6, 10] as const;
 const HISTORY_PAGE_SIZES = [20, 50, 100] as const;
@@ -189,7 +190,6 @@ export default function CreateStudioPage() {
   const imageModels = useMemo(() => modelsByKind(modelCatalog.data, 'image', IMAGE_MODELS), [modelCatalog.data]);
   const textModels = useMemo(() => modelsByKind(modelCatalog.data, 'text', TEXT_MODELS), [modelCatalog.data]);
   const videoModels = useMemo(() => modelsByKind(modelCatalog.data, 'video', VIDEO_MODELS), [modelCatalog.data]);
-
   const mode = modeFromPath(location.pathname);
   const [prompt, setPrompt] = useState('');
   const [textModel, setTextModel] = useState(TEXT_MODELS[0]!.code);
@@ -197,6 +197,13 @@ export default function CreateStudioPage() {
   const [videoModel, setVideoModel] = useState(VIDEO_MODELS[0]!.code);
   const [imageRatio, setImageRatio] = useState<(typeof IMAGE_RATIOS)[number]>('1:1');
   const [imageResolution, setImageResolution] = useState<(typeof IMAGE_RESOLUTIONS)[number]>('1K');
+  const imageResolutionOptions = useMemo(() => {
+    const metaResolutions = imageModels.find((m) => m.code === imageModel)?.meta?.resolutions;
+    const values = metaResolutions?.filter((r): r is typeof IMAGE_RESOLUTIONS[number] =>
+      (IMAGE_RESOLUTIONS as readonly string[]).includes(r),
+    );
+    return values?.length ? values : [...IMAGE_RESOLUTIONS];
+  }, [imageModel, imageModels]);
   const [videoRatio, setVideoRatio] = useState<(typeof VIDEO_RATIOS)[number]>('16:9');
   const [count, setCount] = useState(1);
   const [duration, setDuration] = useState<(typeof VIDEO_DURATIONS)[number]>(6);
@@ -224,6 +231,10 @@ export default function CreateStudioPage() {
     if (textModels.length && !textModels.some((m) => m.code === textModel)) setTextModel(textModels[0]!.code);
     if (videoModels.length && !videoModels.some((m) => m.code === videoModel)) setVideoModel(videoModels[0]!.code);
   }, [imageModel, imageModels, textModel, textModels, videoModel, videoModels]);
+
+  useEffect(() => {
+    if (!imageResolutionOptions.includes(imageResolution)) setImageResolution(imageResolutionOptions[0] ?? '1K');
+  }, [imageResolution, imageResolutionOptions]);
 
   useEffect(() => {
     const el = promptRef.current;
@@ -428,7 +439,7 @@ export default function CreateStudioPage() {
               {mode === 'image' && (
                 <>
                   <ComposerSelect value={imageRatio} onChange={(v) => setImageRatio(v as typeof IMAGE_RATIOS[number])} options={IMAGE_RATIOS.map((r) => ({ value: r, label: r }))} />
-                  <ComposerSelect value={imageResolution} onChange={(v) => setImageResolution(v as typeof IMAGE_RESOLUTIONS[number])} options={IMAGE_RESOLUTIONS.map((r) => ({ value: r, label: r }))} />
+                  <ComposerSelect value={imageResolution} onChange={(v) => setImageResolution(v as typeof IMAGE_RESOLUTIONS[number])} options={imageResolutionOptions.map((r) => ({ value: r, label: r }))} />
                   <ComposerSelect value={String(count)} onChange={(v) => setCount(Number(v))} options={[1, 2, 4].map((n) => ({ value: String(n), label: `${n}张` }))} />
                 </>
               )}
@@ -881,6 +892,7 @@ function modelsByKind(models: PublicModel[] | undefined, kind: PublicModel['kind
       cost: typeof m.unit_points === 'number' ? m.unit_points / 100 : undefined,
       input: typeof m.input_unit_points === 'number' ? m.input_unit_points / 100 : undefined,
       output: typeof m.output_unit_points === 'number' ? m.output_unit_points / 100 : undefined,
+      meta: m.meta,
     }));
   return rows.length ? rows : fallback;
 }

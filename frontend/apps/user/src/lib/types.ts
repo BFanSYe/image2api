@@ -171,6 +171,10 @@ export interface PublicModel {
   input_unit_points?: number;
   output_unit_points?: number;
   enabled: boolean;
+  meta?: {
+    resolutions?: string[];
+    [key: string]: unknown;
+  };
 }
 
 export interface RedeemCDKResp {
