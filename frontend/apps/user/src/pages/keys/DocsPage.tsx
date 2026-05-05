@@ -32,7 +32,7 @@ const IMAGE_CREATE_SAMPLE = String.raw`curl ${EXAMPLE_BASE}/images/generations \
     "model": "gpt-image-2",
     "prompt": "A minimalist product advertisement with a fried chicken bucket placed on a clean white podium.",
     "n": 1,
-    "size": "1024x1024",
+    "size": "1536x1024",
     "quality": "standard",
     "style": "vivid",
     "async": false
@@ -46,7 +46,7 @@ const IMAGE_EDIT_SAMPLE = String.raw`curl ${EXAMPLE_BASE}/images/edits \
     "prompt": "保持主体不变，把背景改成清爽的浅色工作室风格。",
     "image": "https://example.com/input.png",
     "n": 1,
-    "size": "1024x1024",
+    "size": "1536x1024",
     "quality": "high",
     "async": false
   }'`;
@@ -179,7 +179,7 @@ const ENDPOINTS = [
 const IMAGE_SIZES = [
   {
     tier: '1K',
-    note: '当前站内已开放的稳定规格。',
+    note: '适合草图, 快速出图, 成本最低。',
     rows: [
       ['1:1', '1024x1024'],
       ['3:2', '1216x832'],
@@ -191,6 +191,38 @@ const IMAGE_SIZES = [
       ['16:9', '1344x768'],
       ['9:16', '768x1344'],
       ['21:9', '1536x640'],
+    ],
+  },
+  {
+    tier: '2K',
+    note: '适合常规交付, 输出尺寸更大。',
+    rows: [
+      ['1:1', '1248x1248'],
+      ['3:2', '1536x1024'],
+      ['2:3', '1024x1536'],
+      ['4:3', '1440x1088'],
+      ['3:4', '1088x1440'],
+      ['5:4', '1392x1120'],
+      ['4:5', '1120x1392'],
+      ['16:9', '1664x928'],
+      ['9:16', '928x1664'],
+      ['21:9', '1904x816'],
+    ],
+  },
+  {
+    tier: '4K',
+    note: '适合大图展示, 海报预览, 输出尺寸更大。',
+    rows: [
+      ['1:1', '2480x2480'],
+      ['3:2', '3056x2032'],
+      ['2:3', '2032x3056'],
+      ['4:3', '2880x2160'],
+      ['3:4', '2160x2880'],
+      ['5:4', '2784x2224'],
+      ['4:5', '2224x2784'],
+      ['16:9', '3312x1872'],
+      ['9:16', '1872x3312'],
+      ['21:9', '3808x1632'],
     ],
   },
 ] as const;
@@ -281,11 +313,11 @@ export default function DocsPage() {
 
         <DocSection title="图片 /v1/images/generations" actionLabel="复制 cURL" onCopy={() => copy(IMAGE_CREATE_SAMPLE, '图片 cURL')}>
           <p className="mb-3 text-sm leading-7 text-text-secondary">
-            支持文生图、图生图、多图输入。当前稳定开放 1K 规格, 推荐通过 <code className="kbd mx-1">size</code> 和 <code className="kbd mx-1">quality</code> 控制画质。
+            支持文生图、图生图、多图输入。支持 1K, 2K, 4K 规格, 推荐通过 <code className="kbd mx-1">size</code> 和 <code className="kbd mx-1">quality</code> 控制画质。
           </p>
           <CodeBlock>{IMAGE_CREATE_SAMPLE}</CodeBlock>
           <div className="mt-3 rounded-md border border-border bg-surface-2 p-3 text-small text-text-tertiary leading-7">
-            主要参数：<code className="kbd">model</code>、<code className="kbd">prompt</code>、<code className="kbd">n</code>、<code className="kbd">size</code>、<code className="kbd">quality</code>、<code className="kbd">style</code>、<code className="kbd">image/images/ref_assets</code>、<code className="kbd">async</code>。2K/4K 暂未接入稳定放大链路。
+            主要参数：<code className="kbd">model</code>、<code className="kbd">prompt</code>、<code className="kbd">n</code>、<code className="kbd">size</code>、<code className="kbd">quality</code>、<code className="kbd">style</code>、<code className="kbd">image/images/ref_assets</code>、<code className="kbd">async</code>。2K/4K 已接入稳定放大链路。
           </div>
         </DocSection>
 

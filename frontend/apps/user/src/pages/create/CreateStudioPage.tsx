@@ -72,7 +72,7 @@ const TEXT_MODELS = [
 ];
 
 const IMAGE_RATIOS = ['1:1', '3:2', '2:3', '4:3', '3:4', '5:4', '4:5', '16:9', '9:16', '21:9'] as const;
-const IMAGE_RESOLUTIONS = ['1K'] as const;
+const IMAGE_RESOLUTIONS = ['1K', '2K', '4K'] as const;
 const VIDEO_RATIOS = ['16:9', '9:16', '1:1'] as const;
 const VIDEO_DURATIONS = [6, 10] as const;
 const HISTORY_PAGE_SIZES = [20, 50, 100] as const;

@@ -278,11 +278,13 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 		Provider: "gpt",
 		Stage:    "web.start",
 		Meta: map[string]any{
-			"route":     "chatgpt_web",
-			"model":     webModel,
-			"ratio":     ratio,
-			"count":     count,
-			"ref_count": len(req.RefAssets),
+			"route":        "chatgpt_web",
+			"model":        webModel,
+			"ratio":        ratio,
+			"size":         size,
+			"upscale_size": strParam(req.Params, "upscale_size", ""),
+			"count":        count,
+			"ref_count":    len(req.RefAssets),
 		},
 	})
 	if err := p.webBootstrap(ctx, client, base, fp); err != nil {
@@ -404,12 +406,17 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 					URL:      sanitizeDiagURL(u),
 					Meta:     map[string]any{"mime": mime, "poll_count": pollCount},
 				})
+				meta := map[string]any{"provider_route": "chatgpt_web", "size": size, "ratio": ratio}
+				if target := strParam(req.Params, "upscale_size", ""); target != "" {
+					meta["upscale_size"] = target
+					meta["upscale_method"] = strParam(req.Params, "upscale_method", "local_lanczos")
+				}
 				assets = append(assets, provider.Asset{
 					URL:    dataURL,
 					Width:  width,
 					Height: height,
 					Mime:   mime,
-					Meta:   map[string]any{"provider_route": "chatgpt_web", "size": "1K", "ratio": ratio},
+					Meta:   meta,
 				})
 				if len(assets) >= count {
 					break
@@ -1423,16 +1430,58 @@ func copyParam(dst map[string]any, src map[string]any, key string) {
 }
 
 func shouldUseWebImage2(req *provider.Request) bool {
+	if req == nil {
+		return true
+	}
+	if req.Params == nil {
+		req.Params = map[string]any{}
+	}
 	tier := strings.ToUpper(strings.TrimSpace(strParam(req.Params, "resolution", strParam(req.Params, "size_tier", ""))))
+	if tier == "2" || tier == "2K" || tier == "4" || tier == "4K" {
+		req.Params["upscale_size"] = imageSize(req.Params, "1024x1024")
+		req.Params["size"] = baseImage2WebSize(req.Params)
+		req.Params["resolution"] = "1K"
+		req.Params["size_tier"] = "1K"
+		req.Params["upscale_method"] = "local_lanczos"
+		return true
+	}
 	if tier == "" {
 		size := strParam(req.Params, "size", "")
 		w, h := parseSize(size)
 		if size == "" || w*h <= 1500000 {
 			return true
 		}
-		return false
+		req.Params["upscale_size"] = size
+		req.Params["size"] = baseImage2WebSize(req.Params)
+		req.Params["resolution"] = "1K"
+		req.Params["size_tier"] = "1K"
+		req.Params["upscale_method"] = "local_lanczos"
+		return true
 	}
-	return tier == "1K" || tier == "1"
+	return true
+}
+
+func baseImage2WebSize(params map[string]any) string {
+	ratio := webRatioFromSize(strParam(params, "upscale_size", ""), strParam(params, "ratio", strParam(params, "aspect_ratio", "1:1")))
+	if ratio == "" {
+		ratio = "1:1"
+	}
+	base := map[string]string{
+		"1:1":  "1024x1024",
+		"3:2":  "1216x832",
+		"2:3":  "832x1216",
+		"4:3":  "1152x864",
+		"3:4":  "864x1152",
+		"5:4":  "1120x896",
+		"4:5":  "896x1120",
+		"16:9": "1344x768",
+		"9:16": "768x1344",
+		"21:9": "1536x640",
+	}
+	if size := base[ratio]; size != "" {
+		return size
+	}
+	return base["1:1"]
 }
 
 func isGPTImage2(model string) bool {

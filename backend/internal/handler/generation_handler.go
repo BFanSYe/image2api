@@ -608,7 +608,7 @@ func publicModelMeta(modelCode string, meta map[string]any) map[string]any {
 		if out == nil {
 			out = map[string]any{}
 		}
-		out["resolutions"] = []string{"1K"}
+		out["resolutions"] = []string{"1K", "2K", "4K"}
 	}
 	return out
 }
@@ -619,7 +619,7 @@ func defaultPublicModels() []publicModelResp {
 		{ModelCode: "grok-4.20-auto", Name: "Grok Auto", Kind: "text", Provider: "grok", UpstreamModel: "grok-4.20-auto", InputUnitPoints: 150, OutputUnitPoints: 450, Enabled: true},
 		{ModelCode: "grok-4.20-expert", Name: "Grok Expert", Kind: "text", Provider: "grok", UpstreamModel: "grok-4.20-expert", InputUnitPoints: 200, OutputUnitPoints: 600, Enabled: true},
 		{ModelCode: "grok-4.20-heavy", Name: "Grok Heavy", Kind: "text", Provider: "grok", UpstreamModel: "grok-4.20-heavy", InputUnitPoints: 400, OutputUnitPoints: 1200, Enabled: true},
-		{ModelCode: "gpt-image-2", Name: "GPT Image 2", Kind: "image", Provider: "gpt", UpstreamModel: "gpt-image-2", UnitPoints: 0, Enabled: true, Meta: map[string]any{"resolutions": []string{"1K"}}},
+		{ModelCode: "gpt-image-2", Name: "GPT Image 2", Kind: "image", Provider: "gpt", UpstreamModel: "gpt-image-2", UnitPoints: 0, Enabled: true, Meta: map[string]any{"resolutions": []string{"1K", "2K", "4K"}}},
 		{ModelCode: "grok-imagine-video", Name: "Grok Imagine 视频", Kind: "video", Provider: "grok", UpstreamModel: "grok-imagine-video", UnitPoints: 2000, Enabled: true},
 	}
 }

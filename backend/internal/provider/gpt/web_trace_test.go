@@ -3,6 +3,8 @@ package gpt
 import (
 	"strings"
 	"testing"
+
+	"github.com/kleinai/backend/internal/provider"
 )
 
 func TestExtractWebImageToolIDs(t *testing.T) {
@@ -149,5 +151,21 @@ func TestExtractWebImageDirectURLsIgnoresChatGPTStaticAssets(t *testing.T) {
 	urls := extractWebImageDirectURLs(raw)
 	if len(urls) != 1 || !strings.Contains(urls[0], "files.oaiusercontent.com") {
 		t.Fatalf("expected only generated asset URL, got %#v", urls)
+	}
+}
+
+func TestShouldUseWebImage2NormalizesHighResolution(t *testing.T) {
+	req := &provider.Request{Params: map[string]any{"resolution": "2K", "ratio": "16:9"}}
+	if !shouldUseWebImage2(req) {
+		t.Fatal("expected web route for 2K")
+	}
+	if req.Params["upscale_size"] != "1664x928" {
+		t.Fatalf("expected 2K target, got %#v", req.Params["upscale_size"])
+	}
+	if req.Params["size"] != "1344x768" {
+		t.Fatalf("expected 1K web size, got %#v", req.Params["size"])
+	}
+	if req.Params["resolution"] != "1K" || req.Params["upscale_method"] != "local_lanczos" {
+		t.Fatalf("unexpected normalized params: %#v", req.Params)
 	}
 }

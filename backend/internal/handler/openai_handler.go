@@ -43,7 +43,7 @@ type modelItem struct {
 func (h *OpenAIHandler) Models(c *gin.Context) {
 	data := []modelItem{
 		{ID: "gpt-4o-mini", Object: "model", OwnedBy: "kleinai", Kind: "text", Endpoint: "/v1/chat/completions"},
-		{ID: "gpt-image-2", Object: "model", OwnedBy: "openai", Kind: "image", Endpoint: "/v1/images/generations", Meta: gin.H{"edits": true, "mode": "responses_image_generation", "resolutions": []string{"1K"}}},
+		{ID: "gpt-image-2", Object: "model", OwnedBy: "openai", Kind: "image", Endpoint: "/v1/images/generations", Meta: gin.H{"edits": true, "mode": "responses_image_generation", "resolutions": []string{"1K", "2K", "4K"}}},
 		{ID: "grok-imagine-video", Object: "model", OwnedBy: "grok", Kind: "video", Endpoint: "/v1/video/generations", Meta: gin.H{"modes": []string{"text_to_video", "image_to_video", "multi_image_to_video"}}},
 		{ID: "vid-v1", Object: "model", OwnedBy: "kleinai", Kind: "video", Endpoint: "/v1/video/generations", Meta: gin.H{"alias_of": "grok-imagine-video"}},
 		{ID: "vid-i2v", Object: "model", OwnedBy: "kleinai", Kind: "video", Endpoint: "/v1/video/generations", Meta: gin.H{"alias_of": "grok-imagine-video"}},
