@@ -497,10 +497,9 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 	}
 	input := []responseInputItem{{Type: "message", Role: "user", Content: content}}
 	tool := map[string]any{
-		"type":   "image_generation",
-		"action": action,
-		"model":  toolModel,
-		"size":   size,
+		"type":  "image_generation",
+		"model": toolModel,
+		"size":  size,
 	}
 	if quality := imageQuality(req.Params); quality != "" {
 		tool["quality"] = quality
@@ -522,12 +521,11 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 		Include:           []string{"reasoning.encrypted_content"},
 		Model:             mainModel,
 		Store:             false,
-		ToolChoice:        nil,
+		ToolChoice:        map[string]string{"type": "image_generation"},
 		Input:             input,
 		Tools:             []map[string]any{tool},
 	}
 	if isCodexEndpoint(url) {
-		delete(tool, "action")
 		body.Input = []map[string]any{{"role": "user", "content": content}}
 		body.Instructions = "You are an image generation assistant."
 		body.Reasoning = nil

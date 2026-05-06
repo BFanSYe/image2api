@@ -73,6 +73,31 @@ func TestIsGPTImage2NativeAccountAllowsNativeUpstreamAccounts(t *testing.T) {
 	}
 }
 
+func TestIsGPTImage2PreferredNativeAccountPrefersAPIKeyAndNativeBaseURL(t *testing.T) {
+	apiKeyAccount := &model.Account{Provider: model.ProviderGPT, AuthType: model.AuthTypeAPIKey}
+	if !isGPTImage2PreferredNativeAccount(apiKeyAccount) {
+		t.Fatal("expected API key account to be preferred for native image route")
+	}
+
+	meta := `{"client_id":"` + codexOAuthClientID + `"}`
+	codexOAuth := &model.Account{Provider: model.ProviderGPT, AuthType: model.AuthTypeOAuth, OAuthMeta: &meta}
+	if isGPTImage2PreferredNativeAccount(codexOAuth) {
+		t.Fatal("Codex OAuth account must be fallback-only when native API key accounts exist")
+	}
+
+	nativeBase := "https://api.example.test"
+	nativeOAuth := &model.Account{Provider: model.ProviderGPT, AuthType: model.AuthTypeOAuth, BaseURL: &nativeBase}
+	if !isGPTImage2PreferredNativeAccount(nativeOAuth) {
+		t.Fatal("expected OAuth account with non-ChatGPT base URL to be preferred")
+	}
+
+	chatGPTBase := "https://chatgpt.com/backend-api"
+	chatGPTAPIKey := &model.Account{Provider: model.ProviderGPT, AuthType: model.AuthTypeAPIKey, BaseURL: &chatGPTBase}
+	if isGPTImage2PreferredNativeAccount(chatGPTAPIKey) {
+		t.Fatal("ChatGPT base URL must not be preferred for native Responses image route")
+	}
+}
+
 func TestShouldUseGPTWebRouteUsesNativeRouteForHighResolution(t *testing.T) {
 	if shouldUseGPTWebRoute(map[string]any{"resolution": "2K", "ratio": "16:9"}) {
 		t.Fatal("expected native route for 2K")

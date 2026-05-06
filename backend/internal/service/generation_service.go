@@ -423,6 +423,9 @@ func (s *GenerationService) pickAccountForTask(ctx context.Context, t *model.Gen
 		return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", nil)
 	}
 	if accountRequiresCodexRoute(t, params) {
+		if picked, err := s.pool.ReserveWhere(ctx, t.Provider, "round_robin", isGPTImage2PreferredNativeAccount); err == nil {
+			return picked, nil
+		}
 		return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", isGPTImage2NativeAccount)
 	}
 	return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", func(acc *model.Account) bool {
@@ -494,6 +497,20 @@ func shouldUseGPTWebRoute(params map[string]any) bool {
 	return true
 }
 
+func isGPTImage2PreferredNativeAccount(acc *model.Account) bool {
+	if acc == nil || acc.Provider != model.ProviderGPT {
+		return false
+	}
+	if acc.AuthType == model.AuthTypeAPIKey {
+		return !accountBaseLooksChatGPT(acc)
+	}
+	if acc.AuthType == model.AuthTypeOAuth && acc.BaseURL != nil {
+		base := strings.ToLower(strings.TrimSpace(*acc.BaseURL))
+		return base != "" && !strings.Contains(base, "chatgpt.com")
+	}
+	return false
+}
+
 func isGPTImage2NativeAccount(acc *model.Account) bool {
 	if acc == nil || acc.Provider != model.ProviderGPT {
 		return false
@@ -502,13 +519,20 @@ func isGPTImage2NativeAccount(acc *model.Account) bool {
 		return true
 	}
 	if acc.AuthType != model.AuthTypeOAuth {
-		return true
+		return !accountBaseLooksChatGPT(acc)
 	}
 	if acc.BaseURL != nil {
 		base := strings.ToLower(strings.TrimSpace(*acc.BaseURL))
 		return base != "" && !strings.Contains(base, "chatgpt.com")
 	}
 	return false
+}
+
+func accountBaseLooksChatGPT(acc *model.Account) bool {
+	if acc == nil || acc.BaseURL == nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(strings.TrimSpace(*acc.BaseURL)), "chatgpt.com")
 }
 
 func isCodexOAuthAccount(acc *model.Account) bool {
