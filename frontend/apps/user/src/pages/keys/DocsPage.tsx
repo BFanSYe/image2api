@@ -317,7 +317,7 @@ export default function DocsPage() {
           </p>
           <CodeBlock>{IMAGE_CREATE_SAMPLE}</CodeBlock>
           <div className="mt-3 rounded-md border border-border bg-surface-2 p-3 text-small text-text-tertiary leading-7">
-            主要参数：<code className="kbd">model</code>、<code className="kbd">prompt</code>、<code className="kbd">n</code>、<code className="kbd">size</code>、<code className="kbd">quality</code>、<code className="kbd">style</code>、<code className="kbd">image/images/ref_assets</code>、<code className="kbd">async</code>。2K/4K 已接入稳定放大链路。
+            主要参数：<code className="kbd">model</code>、<code className="kbd">prompt</code>、<code className="kbd">n</code>、<code className="kbd">size</code>、<code className="kbd">quality</code>、<code className="kbd">style</code>、<code className="kbd">image/images/ref_assets</code>、<code className="kbd">async</code>。2K/4K 使用上游原生高分辨率能力。
           </div>
         </DocSection>
 

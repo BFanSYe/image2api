@@ -25,6 +25,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"math"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -123,6 +124,7 @@ type responseCompletedEvent struct {
 		Type    string `json:"type"`
 		Code    string `json:"code"`
 	} `json:"error,omitempty"`
+	Diagnostics string `json:"-"`
 }
 
 type responseOutputItem struct {
@@ -131,6 +133,7 @@ type responseOutputItem struct {
 	B64JSON       string `json:"b64_json"`
 	ImageB64      string `json:"image_b64"`
 	URL           string `json:"url"`
+	Text          string `json:"text"`
 	OutputFormat  string `json:"output_format"`
 	Size          string `json:"size"`
 	RevisedPrompt string `json:"revised_prompt"`
@@ -140,6 +143,7 @@ type responseOutputItem struct {
 		B64JSON  string `json:"b64_json"`
 		ImageB64 string `json:"image_b64"`
 		URL      string `json:"url"`
+		Text     string `json:"text"`
 	} `json:"content"`
 }
 
@@ -278,13 +282,12 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 		Provider: "gpt",
 		Stage:    "web.start",
 		Meta: map[string]any{
-			"route":        "chatgpt_web",
-			"model":        webModel,
-			"ratio":        ratio,
-			"size":         size,
-			"upscale_size": strParam(req.Params, "upscale_size", ""),
-			"count":        count,
-			"ref_count":    len(req.RefAssets),
+			"route":     "chatgpt_web",
+			"model":     webModel,
+			"ratio":     ratio,
+			"size":      size,
+			"count":     count,
+			"ref_count": len(req.RefAssets),
 		},
 	})
 	if err := p.webBootstrap(ctx, client, base, fp); err != nil {
@@ -406,17 +409,12 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 					URL:      sanitizeDiagURL(u),
 					Meta:     map[string]any{"mime": mime, "poll_count": pollCount},
 				})
-				meta := map[string]any{"provider_route": "chatgpt_web", "size": size, "ratio": ratio}
-				if target := strParam(req.Params, "upscale_size", ""); target != "" {
-					meta["upscale_size"] = target
-					meta["upscale_method"] = strParam(req.Params, "upscale_method", "local_lanczos")
-				}
 				assets = append(assets, provider.Asset{
 					URL:    dataURL,
 					Width:  width,
 					Height: height,
 					Mime:   mime,
-					Meta:   meta,
+					Meta:   map[string]any{"provider_route": "chatgpt_web", "size": size, "ratio": ratio},
 				})
 				if len(assets) >= count {
 					break
@@ -524,9 +522,18 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 		Include:           []string{"reasoning.encrypted_content"},
 		Model:             mainModel,
 		Store:             false,
-		ToolChoice:        "auto",
+		ToolChoice:        nil,
 		Input:             input,
 		Tools:             []map[string]any{tool},
+	}
+	if isCodexEndpoint(url) {
+		delete(tool, "action")
+		body.Input = []map[string]any{{"role": "user", "content": content}}
+		body.Instructions = "You are an image generation assistant."
+		body.Reasoning = nil
+		body.ParallelToolCalls = false
+		body.Include = nil
+		body.ToolChoice = map[string]string{"type": "image_generation"}
 	}
 
 	start := time.Now()
@@ -536,6 +543,7 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 	}
 	width, height := parseSize(size)
 	assets := make([]provider.Asset, 0, count)
+	var lastCompleted *responseCompletedEvent
 	logUpstream(ctx, req, provider.UpstreamLogEntry{
 		Provider: "gpt",
 		Stage:    "codex.start",
@@ -550,7 +558,7 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 			"action":         action,
 			"ref_count":      len(req.RefAssets),
 			"proxy":          req.ProxyURL != "",
-			"has_toolchoice": true,
+			"has_toolchoice": body.ToolChoice != nil,
 		},
 	})
 	for i := 0; i < count && len(assets) < count; i++ {
@@ -566,10 +574,6 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 			httpReq.Header.Set("Content-Type", "application/json")
 			httpReq.Header.Set("Accept", "text/event-stream")
 			httpReq.Header.Set("User-Agent", userAgentForEndpoint(url))
-			if isCodexEndpoint(url) {
-				httpReq.Header.Set("Originator", "codex-tui")
-				httpReq.Header.Set("Connection", "Keep-Alive")
-			}
 			resp, err := client.Do(httpReq)
 			if err != nil {
 				logUpstream(ctx, req, provider.UpstreamLogEntry{
@@ -611,18 +615,27 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 					})
 				}
 				if !retriedWithoutToolChoice && shouldRetryImage2WithoutToolChoice(raw) {
+					stage := "codex.retry"
+					reason := "tool_choice_fallback"
+					if isCodexEndpoint(url) {
+						stage = "codex.unsupported"
+						reason = "native_image_generation_tool_unavailable"
+					}
 					logUpstream(ctx, req, provider.UpstreamLogEntry{
 						Provider:        "gpt",
-						Stage:           "codex.retry",
+						Stage:           stage,
 						Method:          "POST",
 						URL:             url,
 						StatusCode:      resp.StatusCode,
 						RequestExcerpt:  snippet(payload, 600),
 						ResponseExcerpt: snippet(raw, 600),
 						Meta: map[string]any{
-							"reason": "tool_choice_fallback",
+							"reason": reason,
 						},
 					})
+					if isCodexEndpoint(url) {
+						return nil, fmt.Errorf("gpt image2 native image_generation tool unavailable on upstream account/model")
+					}
 					attemptBody.ToolChoice = nil
 					retriedWithoutToolChoice = true
 					continue
@@ -647,6 +660,7 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 			}
 			completed, err := parseCompletedResponse(resp.Body)
 			_ = resp.Body.Close()
+			lastCompleted = completed
 			if err != nil {
 				logUpstream(ctx, req, provider.UpstreamLogEntry{
 					Provider:       "gpt",
@@ -733,7 +747,8 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 			Stage:           "codex.failed",
 			Method:          "POST",
 			URL:             url,
-			ResponseExcerpt: "gpt image2 returned 0 image",
+			ResponseExcerpt: responseCompletedDiagnostics(lastCompleted),
+			RequestExcerpt:  snippet([]byte(mustJSON(body)), 600),
 			Meta: map[string]any{
 				"model":      modelCode,
 				"size":       size,
@@ -1437,51 +1452,20 @@ func shouldUseWebImage2(req *provider.Request) bool {
 		req.Params = map[string]any{}
 	}
 	tier := strings.ToUpper(strings.TrimSpace(strParam(req.Params, "resolution", strParam(req.Params, "size_tier", ""))))
-	if tier == "2" || tier == "2K" || tier == "4" || tier == "4K" {
-		req.Params["upscale_size"] = imageSize(req.Params, "1024x1024")
-		req.Params["size"] = baseImage2WebSize(req.Params)
-		req.Params["resolution"] = "1K"
-		req.Params["size_tier"] = "1K"
-		req.Params["upscale_method"] = "local_lanczos"
+	switch tier {
+	case "2", "2K", "4", "4K":
+		return false
+	case "1", "1K":
 		return true
 	}
 	if tier == "" {
 		size := strParam(req.Params, "size", "")
 		w, h := parseSize(size)
-		if size == "" || w*h <= 1500000 {
-			return true
+		if size != "" && w*h > 1500000 {
+			return false
 		}
-		req.Params["upscale_size"] = size
-		req.Params["size"] = baseImage2WebSize(req.Params)
-		req.Params["resolution"] = "1K"
-		req.Params["size_tier"] = "1K"
-		req.Params["upscale_method"] = "local_lanczos"
-		return true
 	}
 	return true
-}
-
-func baseImage2WebSize(params map[string]any) string {
-	ratio := webRatioFromSize(strParam(params, "upscale_size", ""), strParam(params, "ratio", strParam(params, "aspect_ratio", "1:1")))
-	if ratio == "" {
-		ratio = "1:1"
-	}
-	base := map[string]string{
-		"1:1":  "1024x1024",
-		"3:2":  "1216x832",
-		"2:3":  "832x1216",
-		"4:3":  "1152x864",
-		"3:4":  "864x1152",
-		"5:4":  "1120x896",
-		"4:5":  "896x1120",
-		"16:9": "1344x768",
-		"9:16": "768x1344",
-		"21:9": "1536x640",
-	}
-	if size := base[ratio]; size != "" {
-		return size
-	}
-	return base["1:1"]
 }
 
 func isGPTImage2(model string) bool {
@@ -1536,15 +1520,59 @@ func isCodexEndpoint(url string) bool {
 }
 
 func userAgentForEndpoint(url string) string {
-	if isCodexEndpoint(url) {
-		return "codex-tui/0.118.0 (Mac OS 26.3.1; arm64) iTerm.app/3.6.9 (codex-tui; 0.118.0)"
-	}
 	return "kleinai/1.0"
+}
+
+func normalizeImage2NativeSize(size string) string {
+	return closestImage2NativeSize(size, openAIImage2NativeSizes())
+}
+
+func openAIImage2NativeSizes() []string {
+	return []string{
+		"1024x1024", "1536x1024", "1024x1536", "2048x2048", "2048x1152", "3840x2160", "2160x3840",
+	}
+}
+
+func closestImage2NativeSize(size string, supported []string) string {
+	size = strings.TrimSpace(size)
+	if size == "" || len(supported) == 0 {
+		return size
+	}
+	for _, candidate := range supported {
+		if size == candidate {
+			return size
+		}
+	}
+	w, h := parseSize(size)
+	if w <= 0 || h <= 0 {
+		return size
+	}
+	aspect := float64(w) / float64(h)
+	area := float64(w * h)
+	best := ""
+	bestPrimary, bestSecondary := math.MaxFloat64, math.MaxFloat64
+	for _, candidate := range supported {
+		cw, ch := parseSize(candidate)
+		if cw <= 0 || ch <= 0 {
+			continue
+		}
+		primary := math.Abs(math.Log((float64(cw) / float64(ch)) / aspect))
+		secondary := math.Abs(math.Log(float64(cw*ch) / area))
+		if best == "" || primary < bestPrimary || (primary == bestPrimary && (secondary < bestSecondary || (secondary == bestSecondary && candidate < best))) {
+			best = candidate
+			bestPrimary = primary
+			bestSecondary = secondary
+		}
+	}
+	if best != "" {
+		return best
+	}
+	return size
 }
 
 func imageSize(params map[string]any, def string) string {
 	if size := strParam(params, "size", ""); size != "" {
-		return size
+		return normalizeImage2NativeSize(size)
 	}
 	ratio := strParam(params, "ratio", strParam(params, "aspect_ratio", "1:1"))
 	tier := strings.ToUpper(strParam(params, "resolution", strParam(params, "size_tier", "1K")))
@@ -1588,16 +1616,16 @@ func imageSize(params map[string]any, def string) string {
 	}
 	if byRatio, ok := sizes[tier]; ok {
 		if size := byRatio[ratio]; size != "" {
-			return size
+			return normalizeImage2NativeSize(size)
 		}
-		return byRatio["1:1"]
+		return normalizeImage2NativeSize(byRatio["1:1"])
 	}
 	if byRatio := sizes["1K"]; byRatio != nil {
 		if size := byRatio[ratio]; size != "" {
-			return size
+			return normalizeImage2NativeSize(size)
 		}
 	}
-	return def
+	return normalizeImage2NativeSize(def)
 }
 
 func imageQuality(params map[string]any) string {
@@ -2269,6 +2297,112 @@ func hexToBytes(s string) ([]byte, error) {
 	return out, nil
 }
 
+func responseCompletedDiagnostics(ev *responseCompletedEvent) string {
+	if ev == nil {
+		return "gpt image2 returned 0 image (no completed response)"
+	}
+	parts := []string{"gpt image2 returned 0 image"}
+	if ev.Error != nil && ev.Error.Message != "" {
+		parts = append(parts, "error="+ev.Error.Message)
+	}
+	if ev.Diagnostics != "" {
+		parts = append(parts, ev.Diagnostics)
+	}
+	if len(ev.Response.Output) == 0 {
+		return strings.Join(parts, "; ")
+	}
+	items := make([]string, 0, len(ev.Response.Output))
+	for i, out := range ev.Response.Output {
+		if i >= 6 {
+			items = append(items, fmt.Sprintf("+%d more", len(ev.Response.Output)-i))
+			break
+		}
+		items = append(items, responseOutputItemDiagnostics(out))
+	}
+	parts = append(parts, "outputs="+strings.Join(items, " | "))
+	return strings.Join(parts, "; ")
+}
+
+func responseOutputItemDiagnostics(out responseOutputItem) string {
+	fields := []string{"type=" + out.Type}
+	if out.Size != "" {
+		fields = append(fields, "size="+out.Size)
+	}
+	if out.OutputFormat != "" {
+		fields = append(fields, "format="+out.OutputFormat)
+	}
+	if out.Result != "" {
+		fields = append(fields, fmt.Sprintf("result_len=%d", len(out.Result)))
+	}
+	if out.B64JSON != "" {
+		fields = append(fields, fmt.Sprintf("b64_len=%d", len(out.B64JSON)))
+	}
+	if out.ImageB64 != "" {
+		fields = append(fields, fmt.Sprintf("image_b64_len=%d", len(out.ImageB64)))
+	}
+	if out.URL != "" {
+		fields = append(fields, "url="+snippet([]byte(out.URL), 160))
+	}
+	if out.Text != "" {
+		fields = append(fields, "text="+snippet([]byte(out.Text), 160))
+	}
+	if len(out.Content) > 0 {
+		content := make([]string, 0, len(out.Content))
+		for i, c := range out.Content {
+			if i >= 4 {
+				content = append(content, fmt.Sprintf("+%d more", len(out.Content)-i))
+				break
+			}
+			cFields := []string{"type=" + c.Type}
+			if c.Result != "" {
+				cFields = append(cFields, fmt.Sprintf("result_len=%d", len(c.Result)))
+			}
+			if c.B64JSON != "" {
+				cFields = append(cFields, fmt.Sprintf("b64_len=%d", len(c.B64JSON)))
+			}
+			if c.ImageB64 != "" {
+				cFields = append(cFields, fmt.Sprintf("image_b64_len=%d", len(c.ImageB64)))
+			}
+			if c.URL != "" {
+				cFields = append(cFields, "url="+snippet([]byte(c.URL), 120))
+			}
+			if c.Text != "" {
+				cFields = append(cFields, "text="+snippet([]byte(c.Text), 120))
+			}
+			content = append(content, "{"+strings.Join(cFields, ",")+"}")
+		}
+		fields = append(fields, "content=["+strings.Join(content, ",")+"]")
+	}
+	return "{" + strings.Join(fields, ",") + "}"
+}
+
+func responseStreamDiagnostics(eventTypes, eventSnippets []string) string {
+	parts := make([]string, 0, 2)
+	if len(eventTypes) > 0 {
+		parts = append(parts, "events="+strings.Join(eventTypes, ","))
+	}
+	if len(eventSnippets) > 0 {
+		parts = append(parts, "samples="+strings.Join(eventSnippets, " || "))
+	}
+	return strings.Join(parts, "; ")
+}
+
+func appendUniqueLimited(items []string, value string, limit int) []string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return items
+	}
+	for _, item := range items {
+		if item == value {
+			return items
+		}
+	}
+	if len(items) >= limit {
+		return items
+	}
+	return append(items, value)
+}
+
 func outputImagePayload(out responseOutputItem) (string, string) {
 	if out.Result != "" {
 		return out.Result, ""
@@ -2301,11 +2435,13 @@ func outputImagePayload(out responseOutputItem) (string, string) {
 
 func parseCompletedResponse(r io.Reader) (*responseCompletedEvent, error) {
 	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 64*1024), 16*1024*1024)
+	scanner.Buffer(make([]byte, 0, 64*1024), 128*1024*1024)
 	var dataLines []string
 	var last *responseCompletedEvent
 	var outputItems []responseOutputItem
 	var partialItems []responseOutputItem
+	var eventTypes []string
+	var eventSnippets []string
 	flush := func() error {
 		if len(dataLines) == 0 {
 			return nil
@@ -2317,11 +2453,23 @@ func parseCompletedResponse(r io.Reader) (*responseCompletedEvent, error) {
 		}
 		var ev responseCompletedEvent
 		err := json.Unmarshal([]byte(data), &ev)
+		var basic struct {
+			Type  string `json:"type"`
+			Event string `json:"event"`
+		}
+		_ = json.Unmarshal([]byte(data), &basic)
+		eventType := basic.Type
+		if eventType == "" {
+			eventType = basic.Event
+		}
 		var direct struct {
 			Output []responseOutputItem `json:"output"`
 			Item   responseOutputItem   `json:"item"`
 		}
 		if err2 := json.Unmarshal([]byte(data), &direct); err2 == nil {
+			if eventType == "" && direct.Item.Type != "" {
+				eventType = "item." + direct.Item.Type
+			}
 			if len(ev.Response.Output) == 0 && len(direct.Output) > 0 {
 				ev.Type = "response.completed"
 				ev.Response.Output = direct.Output
@@ -2329,6 +2477,13 @@ func parseCompletedResponse(r io.Reader) (*responseCompletedEvent, error) {
 			if direct.Item.Type != "" && ev.Type == "" {
 				ev.Type = "response.output_item.done"
 			}
+		}
+		if eventType == "" {
+			eventType = ev.Type
+		}
+		eventTypes = appendUniqueLimited(eventTypes, eventType, 24)
+		if len(eventSnippets) < 8 {
+			eventSnippets = append(eventSnippets, snippet([]byte(data), 360))
 		}
 		if err != nil && len(ev.Response.Output) == 0 && direct.Item.Type == "" {
 			return err
@@ -2383,6 +2538,7 @@ func parseCompletedResponse(r io.Reader) (*responseCompletedEvent, error) {
 	if len(last.Response.Output) == 0 && len(partialItems) > 0 {
 		last.Response.Output = partialItems
 	}
+	last.Diagnostics = responseStreamDiagnostics(eventTypes, eventSnippets)
 	return last, nil
 }
 

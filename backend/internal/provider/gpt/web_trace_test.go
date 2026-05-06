@@ -154,18 +154,39 @@ func TestExtractWebImageDirectURLsIgnoresChatGPTStaticAssets(t *testing.T) {
 	}
 }
 
-func TestShouldUseWebImage2NormalizesHighResolution(t *testing.T) {
+func TestShouldUseWebImage2UsesNativeRouteForHighResolution(t *testing.T) {
 	req := &provider.Request{Params: map[string]any{"resolution": "2K", "ratio": "16:9"}}
+	if shouldUseWebImage2(req) {
+		t.Fatal("expected native route for 2K")
+	}
+	if _, ok := req.Params["upscale_size"]; ok {
+		t.Fatalf("native route must not add upscale_size: %#v", req.Params)
+	}
+
+	req = &provider.Request{Params: map[string]any{"size": "3312x1872"}}
+	if shouldUseWebImage2(req) {
+		t.Fatal("expected native route for explicit 4K size")
+	}
+	if _, ok := req.Params["upscale_method"]; ok {
+		t.Fatalf("native route must not add upscale_method: %#v", req.Params)
+	}
+}
+
+func TestShouldUseWebImage2KeepsWebRouteForOneK(t *testing.T) {
+	req := &provider.Request{Params: map[string]any{"resolution": "1K", "ratio": "16:9"}}
 	if !shouldUseWebImage2(req) {
-		t.Fatal("expected web route for 2K")
+		t.Fatal("expected web route for 1K")
 	}
-	if req.Params["upscale_size"] != "1664x928" {
-		t.Fatalf("expected 2K target, got %#v", req.Params["upscale_size"])
+}
+
+func TestNormalizeImage2NativeSizeKeepsUpstreamNativeSizes(t *testing.T) {
+	if got := normalizeImage2NativeSize("3840x2160"); got != "3840x2160" {
+		t.Fatalf("expected upstream native 4K size, got %s", got)
 	}
-	if req.Params["size"] != "1344x768" {
-		t.Fatalf("expected 1K web size, got %#v", req.Params["size"])
+	if got := normalizeImage2NativeSize("2048x2048"); got != "2048x2048" {
+		t.Fatalf("expected upstream native 2K square size, got %s", got)
 	}
-	if req.Params["resolution"] != "1K" || req.Params["upscale_method"] != "local_lanczos" {
-		t.Fatalf("unexpected normalized params: %#v", req.Params)
+	if got := normalizeImage2NativeSize("1664x928"); got != "2048x1152" {
+		t.Fatalf("expected nearest upstream native 2K 16:9 size, got %s", got)
 	}
 }

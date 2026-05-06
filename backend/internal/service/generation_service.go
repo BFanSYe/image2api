@@ -11,9 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"image"
-	"image/jpeg"
-	"image/png"
 	"io"
 	"net/http"
 	"net/url"
@@ -27,7 +24,6 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"golang.org/x/image/draw"
 	"gorm.io/gorm"
 
 	"github.com/kleinai/backend/internal/model"
@@ -192,7 +188,7 @@ func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask
 	if t.Kind == "video" {
 		timeout = 15 * time.Minute
 	}
-	if t.Provider == model.ProviderGPT && t.Kind == string(provider.KindImage) && strings.EqualFold(t.ModelCode, "gpt-image-2") && shouldUseGPTWebRoute(params) {
+	if t.Provider == model.ProviderGPT && t.Kind == string(provider.KindImage) && strings.EqualFold(t.ModelCode, "gpt-image-2") {
 		timeout = 10 * time.Minute
 	}
 	maxAttempts := 3
@@ -427,7 +423,7 @@ func (s *GenerationService) pickAccountForTask(ctx context.Context, t *model.Gen
 		return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", nil)
 	}
 	if accountRequiresCodexRoute(t, params) {
-		return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", isCodexOAuthAccount)
+		return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", isGPTImage2NativeAccount)
 	}
 	return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", func(acc *model.Account) bool {
 		if acc == nil {
@@ -475,13 +471,44 @@ func isGPTImage2SupportedSize(size string) bool {
 func gptImage2TargetSizeSet() map[string]struct{} {
 	return map[string]struct{}{
 		"1024x1024": {}, "1216x832": {}, "832x1216": {}, "1152x864": {}, "864x1152": {}, "1120x896": {}, "896x1120": {}, "1344x768": {}, "768x1344": {}, "1536x640": {},
-		"1248x1248": {}, "1536x1024": {}, "1024x1536": {}, "1440x1088": {}, "1088x1440": {}, "1392x1120": {}, "1120x1392": {}, "1664x928": {}, "928x1664": {}, "1904x816": {},
-		"2480x2480": {}, "3056x2032": {}, "2032x3056": {}, "2880x2160": {}, "2160x2880": {}, "2784x2224": {}, "2224x2784": {}, "3312x1872": {}, "1872x3312": {}, "3808x1632": {},
+		"1248x1248": {}, "1536x1024": {}, "1024x1536": {}, "1440x1088": {}, "1088x1440": {}, "1392x1120": {}, "1120x1392": {}, "1664x928": {}, "928x1664": {}, "1904x816": {}, "2048x2048": {}, "2048x1152": {},
+		"2480x2480": {}, "3056x2032": {}, "2032x3056": {}, "2880x2160": {}, "2160x2880": {}, "2784x2224": {}, "2224x2784": {}, "3312x1872": {}, "1872x3312": {}, "3808x1632": {}, "3840x2160": {}, "2160x3840": {},
 	}
 }
 
-func shouldUseGPTWebRoute(map[string]any) bool {
+func shouldUseGPTWebRoute(params map[string]any) bool {
+	tier := strings.ToUpper(strings.TrimSpace(strParamAny(params, "resolution", strParamAny(params, "size_tier", ""))))
+	switch tier {
+	case "2", "2K", "4", "4K":
+		return false
+	case "1", "1K":
+		return true
+	}
+	if tier == "" {
+		size := strings.TrimSpace(strParamAny(params, "size", ""))
+		w, h := parseWH(size)
+		if size != "" && w*h > 1500000 {
+			return false
+		}
+	}
 	return true
+}
+
+func isGPTImage2NativeAccount(acc *model.Account) bool {
+	if acc == nil || acc.Provider != model.ProviderGPT {
+		return false
+	}
+	if isCodexOAuthAccount(acc) {
+		return true
+	}
+	if acc.AuthType != model.AuthTypeOAuth {
+		return true
+	}
+	if acc.BaseURL != nil {
+		base := strings.ToLower(strings.TrimSpace(*acc.BaseURL))
+		return base != "" && !strings.Contains(base, "chatgpt.com")
+	}
+	return false
 }
 
 func isCodexOAuthAccount(acc *model.Account) bool {
@@ -808,18 +835,21 @@ func (s *GenerationService) cacheResultAssets(ctx context.Context, t *model.Gene
 	if len(results) == 0 || s.cfg == nil || t == nil {
 		return
 	}
-	params := map[string]any{}
-	_ = json.Unmarshal([]byte(t.Params), &params)
-	targets := make([]image.Point, len(results))
-	needsUpscale := false
+	driver := strings.ToLower(strings.TrimSpace(s.cfg.GetString(ctx, "storage.result_cache_driver", "local")))
+	if driver == "off" || driver == "none" {
+		return
+	}
+	if driver == "oss" && !s.cfg.GetBool(ctx, "oss.enabled", false) {
+		driver = "local"
+	}
+	if driver != "local" && driver != "oss" {
+		driver = "local"
+	}
+
 	needsCookie := false
-	for i, gr := range results {
+	for _, gr := range results {
 		if gr == nil {
 			continue
-		}
-		targets[i] = imageUpscaleTarget(params, gr)
-		if targets[i].X > 0 && targets[i].Y > 0 {
-			needsUpscale = true
 		}
 		if !strings.HasPrefix(strings.TrimSpace(gr.URL), "data:") {
 			needsCookie = true
@@ -827,20 +857,6 @@ func (s *GenerationService) cacheResultAssets(ctx context.Context, t *model.Gene
 		if gr.ThumbURL != nil && *gr.ThumbURL != "" && !strings.HasPrefix(strings.TrimSpace(*gr.ThumbURL), "data:") {
 			needsCookie = true
 		}
-	}
-
-	driver := strings.ToLower(strings.TrimSpace(s.cfg.GetString(ctx, "storage.result_cache_driver", "local")))
-	if driver == "off" || driver == "none" {
-		if !needsUpscale {
-			return
-		}
-		driver = "local"
-	}
-	if driver == "oss" && !s.cfg.GetBool(ctx, "oss.enabled", false) {
-		driver = "local"
-	}
-	if driver != "local" && driver != "oss" {
-		driver = "local"
 	}
 
 	cookie := ""
@@ -856,34 +872,28 @@ func (s *GenerationService) cacheResultAssets(ctx context.Context, t *model.Gene
 		if gr == nil {
 			continue
 		}
-		if u, width, height, ok := s.cacheOneAsset(ctx, driver, cookie, gr.URL, t.TaskID, i, false, targets[i]); ok {
+		if u, ok := s.cacheOneAsset(ctx, driver, cookie, gr.URL, t.TaskID, i, false); ok {
 			gr.URL = u
-			if width > 0 {
-				gr.Width = intPtr(width)
-			}
-			if height > 0 {
-				gr.Height = intPtr(height)
-			}
 		}
 		if gr.ThumbURL != nil && *gr.ThumbURL != "" {
-			if u, _, _, ok := s.cacheOneAsset(ctx, driver, cookie, *gr.ThumbURL, t.TaskID, i, true, image.Point{}); ok {
+			if u, ok := s.cacheOneAsset(ctx, driver, cookie, *gr.ThumbURL, t.TaskID, i, true); ok {
 				gr.ThumbURL = &u
 			}
 		}
 	}
 }
 
-func (s *GenerationService) cacheOneAsset(ctx context.Context, driver, cookie, rawURL, taskID string, seq int, thumb bool, target image.Point) (string, int, int, bool) {
+func (s *GenerationService) cacheOneAsset(ctx context.Context, driver, cookie, rawURL, taskID string, seq int, thumb bool) (string, bool) {
 	if strings.HasPrefix(strings.TrimSpace(rawURL), "data:") {
-		return s.cacheDataURLAsset(ctx, driver, rawURL, taskID, seq, thumb, target)
+		return s.cacheDataURLAsset(ctx, driver, rawURL, taskID, seq, thumb)
 	}
 	source := normalizeAssetSourceURL(rawURL)
 	if source == "" || strings.HasPrefix(source, "/api/v1/gen/cached/") {
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, source, nil)
 	if err != nil {
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	req.Header.Set("Cookie", cookie)
 	req.Header.Set("Referer", "https://grok.com/")
@@ -892,12 +902,12 @@ func (s *GenerationService) cacheOneAsset(ctx context.Context, driver, cookie, r
 	resp, err := (&http.Client{Timeout: 5 * time.Minute}).Do(req)
 	if err != nil {
 		logger.FromCtx(ctx).Warn("asset.cache.download_failed", zap.String("url", source), zap.Error(err))
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
 		logger.FromCtx(ctx).Warn("asset.cache.bad_status", zap.String("url", source), zap.Int("status", resp.StatusCode))
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	ext := assetExt(source, resp.Header.Get("Content-Type"), thumb)
 	now := time.Now()
@@ -909,55 +919,45 @@ func (s *GenerationService) cacheOneAsset(ctx context.Context, driver, cookie, r
 	dst := filepath.Join(root, filepath.FromSlash(rel))
 	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		logger.FromCtx(ctx).Warn("asset.cache.mkdir_failed", zap.Error(err))
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	f, err := os.Create(dst)
 	if err != nil {
 		logger.FromCtx(ctx).Warn("asset.cache.create_failed", zap.Error(err))
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	written, err := io.Copy(f, resp.Body)
 	closeErr := f.Close()
 	if err != nil {
 		logger.FromCtx(ctx).Warn("asset.cache.write_failed", zap.Error(err))
 		_ = os.Remove(dst)
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	if closeErr != nil {
 		logger.FromCtx(ctx).Warn("asset.cache.close_failed", zap.Error(closeErr))
 		_ = os.Remove(dst)
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	if written <= 0 {
 		_ = os.Remove(dst)
 		logger.FromCtx(ctx).Warn("asset.cache.empty_file", zap.String("url", source), zap.String("file", dst))
-		return rawURL, 0, 0, false
-	}
-	width, height := 0, 0
-	if target.X > 0 && target.Y > 0 && !thumb {
-		if w, h, ok := resizeImageFile(dst, ext, target); ok {
-			width, height = w, h
-		}
+		return rawURL, false
 	}
 	localURL := "/api/v1/gen/cached/" + rel
 	if driver == "oss" {
-		uploadContentType := resp.Header.Get("Content-Type")
-		if width > 0 && height > 0 {
-			uploadContentType = assetContentType(ext)
-		}
-		if ossURL, err := s.uploadCachedAssetToOSS(ctx, dst, rel, uploadContentType); err == nil && ossURL != "" {
-			return ossURL, width, height, true
+		if ossURL, err := s.uploadCachedAssetToOSS(ctx, dst, rel, resp.Header.Get("Content-Type")); err == nil && ossURL != "" {
+			return ossURL, true
 		} else if err != nil {
 			logger.FromCtx(ctx).Warn("asset.cache.oss_upload_failed", zap.String("file", dst), zap.Error(err))
 		}
 	}
-	return localURL, width, height, true
+	return localURL, true
 }
 
-func (s *GenerationService) cacheDataURLAsset(ctx context.Context, driver, rawURL, taskID string, seq int, thumb bool, target image.Point) (string, int, int, bool) {
+func (s *GenerationService) cacheDataURLAsset(ctx context.Context, driver, rawURL, taskID string, seq int, thumb bool) (string, bool) {
 	contentType, payload, ok := strings.Cut(strings.TrimSpace(rawURL), ",")
 	if !ok || !strings.Contains(contentType, ";base64") {
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	contentType = strings.TrimPrefix(contentType, "data:")
 	if idx := strings.Index(contentType, ";"); idx >= 0 {
@@ -969,11 +969,11 @@ func (s *GenerationService) cacheDataURLAsset(ctx context.Context, driver, rawUR
 	data, err := base64.StdEncoding.DecodeString(payload)
 	if err != nil {
 		logger.FromCtx(ctx).Warn("asset.cache.data_url_decode_failed", zap.Error(err))
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	if len(data) == 0 {
 		logger.FromCtx(ctx).Warn("asset.cache.data_url_empty")
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	ext := assetExt("", contentType, thumb)
 	now := time.Now()
@@ -985,31 +985,21 @@ func (s *GenerationService) cacheDataURLAsset(ctx context.Context, driver, rawUR
 	dst := filepath.Join(root, filepath.FromSlash(rel))
 	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		logger.FromCtx(ctx).Warn("asset.cache.mkdir_failed", zap.Error(err))
-		return rawURL, 0, 0, false
+		return rawURL, false
 	}
 	if err := os.WriteFile(dst, data, 0644); err != nil {
 		logger.FromCtx(ctx).Warn("asset.cache.write_failed", zap.Error(err))
-		return rawURL, 0, 0, false
-	}
-	width, height := 0, 0
-	if target.X > 0 && target.Y > 0 && !thumb {
-		if w, h, ok := resizeImageFile(dst, ext, target); ok {
-			width, height = w, h
-		}
+		return rawURL, false
 	}
 	localURL := "/api/v1/gen/cached/" + rel
 	if driver == "oss" {
-		uploadContentType := contentType
-		if width > 0 && height > 0 {
-			uploadContentType = assetContentType(ext)
-		}
-		if ossURL, err := s.uploadCachedAssetToOSS(ctx, dst, rel, uploadContentType); err == nil && ossURL != "" {
-			return ossURL, width, height, true
+		if ossURL, err := s.uploadCachedAssetToOSS(ctx, dst, rel, contentType); err == nil && ossURL != "" {
+			return ossURL, true
 		} else if err != nil {
 			logger.FromCtx(ctx).Warn("asset.cache.oss_upload_failed", zap.String("file", dst), zap.Error(err))
 		}
 	}
-	return localURL, width, height, true
+	return localURL, true
 }
 
 func (s *GenerationService) normalizeInputRefs(ctx context.Context, t *model.GenerationTask, refs []string) []string {
@@ -1030,7 +1020,7 @@ func (s *GenerationService) normalizeInputRefs(ctx context.Context, t *model.Gen
 			continue
 		}
 		if strings.HasPrefix(ref, "data:") {
-			if cached, _, _, ok := s.cacheDataURLAsset(ctx, driver, ref, t.TaskID, i, false, image.Point{}); ok && cached != "" {
+			if cached, ok := s.cacheDataURLAsset(ctx, driver, ref, t.TaskID, i, false); ok && cached != "" {
 				out = append(out, cached)
 				continue
 			}
@@ -1073,74 +1063,6 @@ func compactLargeInlineValue(v any) any {
 	default:
 		return v
 	}
-}
-
-func imageUpscaleTarget(params map[string]any, gr *model.GenerationResult) image.Point {
-	if gr != nil && gr.Meta != nil {
-		var meta map[string]any
-		if err := json.Unmarshal([]byte(*gr.Meta), &meta); err == nil {
-			if target := strings.TrimSpace(strParamAny(meta, "upscale_size", "")); target != "" {
-				if w, h := parseWH(target); w > 0 && h > 0 {
-					return image.Pt(w, h)
-				}
-			}
-		}
-	}
-	if target := strings.TrimSpace(strParamAny(params, "upscale_size", "")); target != "" {
-		if w, h := parseWH(target); w > 0 && h > 0 {
-			return image.Pt(w, h)
-		}
-	}
-	if gr != nil && gr.Width != nil && gr.Height != nil && *gr.Width > 0 && *gr.Height > 0 {
-		if base := baseGPTImage2Size(params); base != "" {
-			if bw, bh := parseWH(base); bw > 0 && bh > 0 && (*gr.Width != bw || *gr.Height != bh) {
-				return image.Pt(*gr.Width, *gr.Height)
-			}
-		}
-	}
-	return image.Point{}
-}
-
-func baseGPTImage2Size(params map[string]any) string {
-	ratio := strParamAny(params, "ratio", strParamAny(params, "aspect_ratio", "1:1"))
-	base := map[string]string{
-		"1:1": "1024x1024", "3:2": "1216x832", "2:3": "832x1216", "4:3": "1152x864", "3:4": "864x1152",
-		"5:4": "1120x896", "4:5": "896x1120", "16:9": "1344x768", "9:16": "768x1344", "21:9": "1536x640",
-	}
-	return base[ratio]
-}
-
-func resizeImageFile(filePath, ext string, target image.Point) (int, int, bool) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return 0, 0, false
-	}
-	img, _, err := image.Decode(f)
-	_ = f.Close()
-	if err != nil || img == nil {
-		return 0, 0, false
-	}
-	if target.X <= 0 || target.Y <= 0 {
-		return 0, 0, false
-	}
-	dst := image.NewRGBA(image.Rect(0, 0, target.X, target.Y))
-	draw.CatmullRom.Scale(dst, dst.Bounds(), img, img.Bounds(), draw.Over, nil)
-	out, err := os.Create(filePath)
-	if err != nil {
-		return 0, 0, false
-	}
-	defer out.Close()
-	switch strings.ToLower(ext) {
-	case ".jpg", ".jpeg":
-		if err := jpeg.Encode(out, dst, &jpeg.Options{Quality: 94}); err != nil {
-			return 0, 0, false
-		}
-	default:
-		if err := png.Encode(out, dst); err != nil {
-			return 0, 0, false
-		}
-	}
-	return target.X, target.Y, true
 }
 
 func (s *GenerationService) uploadCachedAssetToOSS(ctx context.Context, filePath, rel, contentType string) (string, error) {
@@ -1252,21 +1174,6 @@ func normalizeAssetSourceURL(v string) string {
 		return v
 	}
 	return "https://assets.grok.com/" + strings.TrimLeft(v, "/")
-}
-
-func assetContentType(ext string) string {
-	switch strings.ToLower(ext) {
-	case ".jpg", ".jpeg":
-		return "image/jpeg"
-	case ".webp":
-		return "image/webp"
-	case ".mp4":
-		return "video/mp4"
-	case ".webm":
-		return "video/webm"
-	default:
-		return "image/png"
-	}
 }
 
 func assetExt(source, contentType string, thumb bool) string {

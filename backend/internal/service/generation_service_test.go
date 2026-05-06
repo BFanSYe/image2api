@@ -1,15 +1,9 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
-	"image"
-	"image/color"
-	"image/png"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -47,7 +41,7 @@ func TestValidateGenerationCreateRequestAllowsGPTImage2Resolutions(t *testing.T)
 }
 
 func TestValidateGenerationCreateRequestAllowsGPTImage2Sizes(t *testing.T) {
-	for _, size := range []string{"1344x768", "1664x928", "3312x1872", "3808x1632"} {
+	for _, size := range []string{"1344x768", "1664x928", "2048x1152", "3312x1872", "3840x2160", "2160x3840"} {
 		req := CreateRequest{
 			Kind:      "image",
 			Provider:  "gpt",
@@ -60,41 +54,34 @@ func TestValidateGenerationCreateRequestAllowsGPTImage2Sizes(t *testing.T) {
 	}
 }
 
-func TestImageUpscaleTargetUsesMeta(t *testing.T) {
-	meta := `{"upscale_size":"1664x928"}`
-	gr := &model.GenerationResult{Meta: &meta}
-	pt := imageUpscaleTarget(map[string]any{}, gr)
-	if pt.X != 1664 || pt.Y != 928 {
-		t.Fatalf("expected 1664x928 from meta, got %dx%d", pt.X, pt.Y)
+func TestIsGPTImage2NativeAccountAllowsNativeUpstreamAccounts(t *testing.T) {
+	apiKeyAccount := &model.Account{Provider: model.ProviderGPT, AuthType: model.AuthTypeAPIKey}
+	if !isGPTImage2NativeAccount(apiKeyAccount) {
+		t.Fatal("expected API key account to be eligible for native image route")
+	}
+
+	meta := `{"client_id":"` + codexOAuthClientID + `"}`
+	codexOAuth := &model.Account{Provider: model.ProviderGPT, AuthType: model.AuthTypeOAuth, OAuthMeta: &meta}
+	if !isGPTImage2NativeAccount(codexOAuth) {
+		t.Fatal("expected Codex OAuth account to be eligible for native image route")
+	}
+
+	chatGPTBase := "https://chatgpt.com/backend-api"
+	ordinaryOAuth := &model.Account{Provider: model.ProviderGPT, AuthType: model.AuthTypeOAuth, BaseURL: &chatGPTBase}
+	if isGPTImage2NativeAccount(ordinaryOAuth) {
+		t.Fatal("ordinary ChatGPT OAuth account without Codex client must not be used for native image route")
 	}
 }
 
-func TestCacheDataURLAssetUpscalesImage(t *testing.T) {
-	tmp := t.TempDir()
-	t.Setenv("KLEIN_STORAGE_ROOT", tmp)
-
-	img := image.NewRGBA(image.Rect(0, 0, 2, 1))
-	img.Set(0, 0, color.RGBA{255, 0, 0, 255})
-	img.Set(1, 0, color.RGBA{0, 255, 0, 255})
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
-		t.Fatal(err)
+func TestShouldUseGPTWebRouteUsesNativeRouteForHighResolution(t *testing.T) {
+	if shouldUseGPTWebRoute(map[string]any{"resolution": "2K", "ratio": "16:9"}) {
+		t.Fatal("expected native route for 2K")
 	}
-	dataURL := "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
-
-	s := &GenerationService{}
-	url, w, h, ok := s.cacheDataURLAsset(context.Background(), "local", dataURL, "task01", 0, false, image.Pt(4, 2))
-	if !ok {
-		t.Fatal("expected cacheDataURLAsset to succeed")
+	if shouldUseGPTWebRoute(map[string]any{"size": "3312x1872"}) {
+		t.Fatal("expected native route for explicit 4K size")
 	}
-	if w != 4 || h != 2 {
-		t.Fatalf("expected upscaled 4x2, got %dx%d", w, h)
-	}
-	if url == "" {
-		t.Fatal("expected non-empty URL")
-	}
-	if _, err := os.Stat(filepath.Join(tmp, strings.TrimPrefix(url, "/api/v1/gen/cached/"))); err != nil {
-		t.Fatalf("expected cached file to exist: %v", err)
+	if !shouldUseGPTWebRoute(map[string]any{"resolution": "1K", "ratio": "16:9"}) {
+		t.Fatal("expected web route for 1K")
 	}
 }
 
@@ -104,7 +91,7 @@ func TestCacheDataURLAssetKeepsJPEGExtension(t *testing.T) {
 
 	dataURL := "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString([]byte("not-a-real-jpeg"))
 	s := &GenerationService{}
-	url, _, _, ok := s.cacheDataURLAsset(context.Background(), "local", dataURL, "task02", 0, false, image.Point{})
+	url, ok := s.cacheDataURLAsset(context.Background(), "local", dataURL, "task02", 0, false)
 	if !ok {
 		t.Fatal("expected cacheDataURLAsset to succeed")
 	}
