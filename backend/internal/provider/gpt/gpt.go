@@ -697,7 +697,7 @@ func (p *Provider) generateImage2(ctx context.Context, req *provider.Request) (*
 			}
 			for _, out := range completed.Response.Output {
 				imageData, imageURL := outputImagePayload(out)
-				if out.Type != "image_generation_call" && imageData == "" && imageURL == "" {
+				if imageData == "" && imageURL == "" {
 					continue
 				}
 				mime := mimeForImageFormat(out.OutputFormat)
@@ -2431,6 +2431,18 @@ func outputImagePayload(out responseOutputItem) (string, string) {
 	return "", ""
 }
 
+func outputItemsWithImagePayload(items []responseOutputItem) []responseOutputItem {
+	out := make([]responseOutputItem, 0, len(items))
+	for _, item := range items {
+		imageData, imageURL := outputImagePayload(item)
+		if imageData == "" && imageURL == "" {
+			continue
+		}
+		out = append(out, item)
+	}
+	return out
+}
+
 func parseCompletedResponse(r io.Reader) (*responseCompletedEvent, error) {
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 0, 64*1024), 128*1024*1024)
@@ -2530,11 +2542,14 @@ func parseCompletedResponse(r io.Reader) (*responseCompletedEvent, error) {
 	if last == nil {
 		last = &responseCompletedEvent{Type: "response.completed"}
 	}
-	if len(last.Response.Output) == 0 && len(outputItems) > 0 {
+	if payloadItems := outputItemsWithImagePayload(last.Response.Output); len(payloadItems) > 0 {
+		last.Response.Output = payloadItems
+	} else if payloadItems := outputItemsWithImagePayload(outputItems); len(payloadItems) > 0 {
+		last.Response.Output = payloadItems
+	} else if len(partialItems) > 0 {
+		last.Response.Output = []responseOutputItem{partialItems[len(partialItems)-1]}
+	} else if len(last.Response.Output) == 0 && len(outputItems) > 0 {
 		last.Response.Output = outputItems
-	}
-	if len(last.Response.Output) == 0 && len(partialItems) > 0 {
-		last.Response.Output = partialItems
 	}
 	last.Diagnostics = responseStreamDiagnostics(eventTypes, eventSnippets)
 	return last, nil

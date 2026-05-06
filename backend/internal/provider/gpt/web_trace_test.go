@@ -62,6 +62,32 @@ func TestParseWebImageSSE(t *testing.T) {
 	}
 }
 
+func TestParseCompletedResponseFallsBackToLastPartialImage(t *testing.T) {
+	raw := strings.NewReader(strings.Join([]string{
+		`data: {"type":"response.image_generation_call.partial_image","partial_image_b64":"Zmlyc3Q=","output_format":"png"}`,
+		"",
+		`data: {"type":"response.image_generation_call.partial_image","partial_image_b64":"c2Vjb25k","output_format":"png"}`,
+		"",
+		`data: {"type":"response.completed","response":{"output":[{"type":"image_generation_call","output_format":"png"}]}}`,
+		"",
+	}, "\n"))
+
+	completed, err := parseCompletedResponse(raw)
+	if err != nil {
+		t.Fatalf("parseCompletedResponse error: %v", err)
+	}
+	if len(completed.Response.Output) != 1 {
+		t.Fatalf("expected 1 output, got %d", len(completed.Response.Output))
+	}
+	imageData, imageURL := outputImagePayload(completed.Response.Output[0])
+	if imageURL != "" {
+		t.Fatalf("unexpected image url: %s", imageURL)
+	}
+	if imageData != "c2Vjb25k" {
+		t.Fatalf("expected last partial image, got %q", imageData)
+	}
+}
+
 func TestParseWebImageSSEIgnoresUploadedReferenceIDs(t *testing.T) {
 	raw := strings.NewReader(strings.Join([]string{
 		`data: {"conversation_id":"conv_ref","message":{"author":{"role":"user"},"content":{"content_type":"multimodal_text","parts":[{"asset_pointer":"file-service://file_reference12345"},"make it transparent"]}}}`,
