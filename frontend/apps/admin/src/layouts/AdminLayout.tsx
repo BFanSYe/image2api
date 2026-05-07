@@ -5,7 +5,6 @@ import {
   ChevronDown,
   FileText,
   Globe2,
-  Github,
   KeyRound,
   LayoutDashboard,
   LockKeyhole,
@@ -29,10 +28,6 @@ import { useAuthStore } from '../stores/auth';
 import { toast } from '../stores/toast';
 
 const APP_VERSION = 'v2.0.0';
-const SOURCE_HREF = String.fromCharCode(
-  104, 116, 116, 112, 115, 58, 47, 47, 103, 105, 116, 104, 117, 98, 46, 99,
-  111, 109, 47, 52, 51, 50, 53, 51, 57, 47, 103, 112, 116, 50, 97, 112, 105,
-);
 
 const NAV = [
   { to: '/dashboard', label: '仪表盘', icon: LayoutDashboard },
@@ -112,16 +107,6 @@ export function AdminLayout() {
         <div className="border-t border-border px-4 py-4 text-tiny text-text-tertiary">
           <div className="flex items-center gap-2">
             <span>{APP_VERSION}</span>
-            <a
-              href={SOURCE_HREF}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 rounded-full px-2 py-1 transition hover:bg-surface-2 hover:text-text-primary"
-              title="开源地址"
-            >
-              <Github size={12} />
-              <span>开源地址</span>
-            </a>
           </div>
         </div>
       </aside>
