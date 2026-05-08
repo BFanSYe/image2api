@@ -4,9 +4,10 @@ metadata:
   repo: `/srv/gpt2api`
   branch: `main`
   base_ref: `origin/main`
-  head_commit: `d6c7374`
+  head_commit_at_last_code_change: `e5847e1`
   commit_range: `origin/main..HEAD`
   generated_at: `2026-05-08 14:12:39 CST`
+  last_runtime_update: `2026-05-08 15:41:00 CST`
   intended_reader: `AI coding agent`
   language: `zh-CN`
 
@@ -30,6 +31,7 @@ metadata:
 | `240a21e` | Prefer API key native image accounts | 原生高清路由优先使用 API key 或非 ChatGPT base 的账号, Codex OAuth 作为兜底. |
 | `b6e4244` | Fix 4K image rendering from native responses | 修复原生 Responses 返回 base64/事件格式时的图片提取, 避免 4K 结果空白或无法展示. |
 | `d6c7374` | Remove open source links | 删除用户端和管理端前端布局里的 GitHub/开源入口和混淆链接常量. |
+| `e5847e1` | Add AI handoff document | 新增本文档, 用于其他 AI 工具接手代码和运行状态. |
 
 ## 2. 运行与部署变更
 
@@ -109,6 +111,83 @@ Current behavior:
   - `/admin/assets/*` 支持静态资产和长期缓存.
   - `/admin/` fallback 到 `/admin/index.html`.
   - Dev Nginx 还代理 `/admin/api/` 到 `admin:17188`.
+
+### 2.4 HK 单域名加速入口
+
+Active public domain:
+- `https://image.zuiying.shop`
+- DNS A record points to HK public IP `69.165.73.30`.
+
+Active routing:
+- `https://image.zuiying.shop/` -> user web.
+- `https://image.zuiying.shop/api/` -> user API through user-web internal Nginx.
+- `https://image.zuiying.shop/admin/` -> admin web.
+- `https://image.zuiying.shop/admin/api/` -> admin API through admin-web internal Nginx.
+- `https://image.zuiying.shop/v1/` -> OpenAI-compatible API.
+
+Important runtime fact:
+- WireGuard was attempted first with `wg-gpt2api`, but HK public networking did not deliver UDP handshake packets on `51820/UDP` or `443/UDP`.
+- Both WireGuard services are disabled after verification:
+  - Source: `systemctl is-enabled wg-quick@wg-gpt2api` -> `disabled`.
+  - HK: `systemctl is-enabled wg-quick@wg-gpt2api` -> `disabled`.
+- Do not assume WireGuard is the active回源 path unless UDP forwarding is later opened and the link is re-verified.
+
+Active回源 path:
+- Source initiates an SSH reverse tunnel to HK.
+- Source systemd unit: `/etc/systemd/system/gpt2api-hk-tunnel.service`.
+- Source SSH key: `/home/ubuntu/.ssh/gpt2api_hk_ed25519`.
+- HK SSH authorized key was installed for `root`.
+- HK `sshd` was adjusted with `/etc/ssh/sshd_config.d/99-gpt2api-pubkey.conf` to allow public-key login.
+- HK `sshd -T` should include:
+  - `pubkeyauthentication yes`
+  - `allowtcpforwarding yes`
+  - `gatewayports no`
+
+Tunnel mapping:
+- HK `127.0.0.1:27080` -> source `127.0.0.1:17080`.
+- HK `127.0.0.1:27088` -> source `127.0.0.1:17088`.
+- HK `127.0.0.1:27200` -> source `127.0.0.1:17200`.
+- HK loopback ports are not exposed publicly; public access still enters through HK Nginx `80/443`.
+
+HK Nginx files:
+- Site: `/etc/nginx/sites-available/image.zuiying.shop.conf`.
+- Enabled symlink: `/etc/nginx/sites-enabled/image.zuiying.shop.conf`.
+- WebSocket/upgrade map: `/etc/nginx/conf.d/gpt2api_ws_upgrade_map.conf`.
+- Existing `hk-api.zuiying.shop` config was not modified.
+
+TLS:
+- Certificate path: `/etc/letsencrypt/live/image.zuiying.shop/fullchain.pem`.
+- Key path: `/etc/letsencrypt/live/image.zuiying.shop/privkey.pem`.
+- Certbot renewal uses webroot `/var/www/letsencrypt`.
+- Certificate observed expiry: `2026-08-06 06:41:35+00:00`.
+- `certbot.timer` is enabled and active on HK.
+
+Verification commands:
+
+```bash
+systemctl is-active gpt2api-hk-tunnel.service
+ssh -i ~/.ssh/gpt2api_hk_ed25519 -o IdentitiesOnly=yes root@69.165.73.30 'ss -ltnp | grep -E ":(27080|27088|27200)\b"'
+curl -sS -I https://image.zuiying.shop/
+curl -sS -I https://image.zuiying.shop/admin
+curl -sS https://image.zuiying.shop/api/v1/ping
+curl -sS https://image.zuiying.shop/admin/api/v1/ping
+curl -sS https://image.zuiying.shop/v1/health
+```
+
+Expected key results:
+- `gpt2api-hk-tunnel.service` is `active`.
+- HK loopback ports `27080`, `27088`, `27200` are listened by `sshd`.
+- `/` returns user SPA HTML.
+- `/admin` returns `302` to `/admin/`.
+- `/api/v1/ping` returns `{"pong":true}`.
+- `/admin/api/v1/ping` returns `{"pong":true,"scope":"admin"}`.
+- `/v1/health` returns `{"ok":true}`.
+- `/v1/models` without API key returns `401` with `API Key 无效`; this confirms the route reaches the OpenAI-compatible service.
+
+Security notes:
+- Do not write the HK root password into repository files, docs, shell history, or process arguments.
+- Since the password was shared in chat, rotate the HK root password after confirming there is a separate recovery path or key login.
+- The active SSH tunnel uses remote loopback bind only. Do not change it to `0.0.0.0` unless the HK Nginx design is intentionally changed.
 
 ## 3. GPT Image 2 生成链路
 
