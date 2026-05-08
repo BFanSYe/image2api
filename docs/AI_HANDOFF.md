@@ -7,7 +7,7 @@ metadata:
   head_commit_at_last_code_change: `e5847e1`
   commit_range: `origin/main..HEAD`
   generated_at: `2026-05-08 14:12:39 CST`
-  last_runtime_update: `2026-05-08 15:41:00 CST`
+  last_runtime_update: `2026-05-08 17:00:58 CST`
   intended_reader: `AI coding agent`
   language: `zh-CN`
 
@@ -112,61 +112,71 @@ Current behavior:
   - `/admin/` fallback 到 `/admin/index.html`.
   - Dev Nginx 还代理 `/admin/api/` 到 `admin:17188`.
 
-### 2.4 HK 单域名加速入口
+### 2.4 HK 单域名公网 HTTPS 回源入口
 
 Active public domain:
 - `https://image.zuiying.shop`
 - DNS A record points to HK public IP `69.165.73.30`.
 
+Origin domain:
+- `https://image-origin.zuiying.shop`
+- DNS A record points to source public IP `43.134.122.243`.
+
 Active routing:
 - `https://image.zuiying.shop/` -> user web.
-- `https://image.zuiying.shop/api/` -> user API through user-web internal Nginx.
+- `https://image.zuiying.shop/api/` -> user API.
 - `https://image.zuiying.shop/admin/` -> admin web.
-- `https://image.zuiying.shop/admin/api/` -> admin API through admin-web internal Nginx.
+- `https://image.zuiying.shop/admin/api/` -> admin API.
 - `https://image.zuiying.shop/v1/` -> OpenAI-compatible API.
 
-Important runtime fact:
-- WireGuard was attempted first with `wg-gpt2api`, but HK public networking did not deliver UDP handshake packets on `51820/UDP` or `443/UDP`.
-- Both WireGuard services are disabled after verification:
-  - Source: `systemctl is-enabled wg-quick@wg-gpt2api` -> `disabled`.
-  - HK: `systemctl is-enabled wg-quick@wg-gpt2api` -> `disabled`.
-- Do not assume WireGuard is the active回源 path unless UDP forwarding is later opened and the link is re-verified.
-
 Active回源 path:
-- Source initiates an SSH reverse tunnel to HK.
-- Source systemd unit: `/etc/systemd/system/gpt2api-hk-tunnel.service`.
-- Source SSH key: `/home/ubuntu/.ssh/gpt2api_hk_ed25519`.
-- HK SSH authorized key was installed for `root`.
-- HK `sshd` was adjusted with `/etc/ssh/sshd_config.d/99-gpt2api-pubkey.conf` to allow public-key login.
-- HK `sshd -T` should include:
-  - `pubkeyauthentication yes`
-  - `allowtcpforwarding yes`
-  - `gatewayports no`
-
-Tunnel mapping:
-- HK `127.0.0.1:27080` -> source `127.0.0.1:17080`.
-- HK `127.0.0.1:27088` -> source `127.0.0.1:17088`.
-- HK `127.0.0.1:27200` -> source `127.0.0.1:17200`.
-- HK loopback ports are not exposed publicly; public access still enters through HK Nginx `80/443`.
+- HK Nginx terminates TLS for `image.zuiying.shop`.
+- HK Nginx proxies all paths to `https://43.134.122.243:443`.
+- HK回源 request uses `Host: image-origin.zuiying.shop`.
+- HK回源 TLS SNI uses `image-origin.zuiying.shop`.
+- Source Nginx terminates TLS for `image-origin.zuiying.shop`.
+- Source Nginx routes paths to local gpt2api ports:
+  - `/` -> `127.0.0.1:17080`.
+  - `/api/` -> `127.0.0.1:17180`.
+  - `/admin/` -> `127.0.0.1:17088`.
+  - `/admin/api/` -> `127.0.0.1:17188`.
+  - `/v1/` -> `127.0.0.1:17200`.
 
 HK Nginx files:
 - Site: `/etc/nginx/sites-available/image.zuiying.shop.conf`.
 - Enabled symlink: `/etc/nginx/sites-enabled/image.zuiying.shop.conf`.
-- WebSocket/upgrade map: `/etc/nginx/conf.d/gpt2api_ws_upgrade_map.conf`.
 - Existing `hk-api.zuiying.shop` config was not modified.
 
+Source Nginx files:
+- Site: `/etc/nginx/sites-available/image-origin.zuiying.shop`.
+- Enabled symlink: `/etc/nginx/sites-enabled/image-origin.zuiying.shop`.
+- Old source symlink `/etc/nginx/sites-enabled/image.zuiying.shop` was removed after switching source origin to `image-origin.zuiying.shop`.
+- Old source available file `/etc/nginx/sites-available/image.zuiying.shop` remains as an inactive historical config.
+
 TLS:
-- Certificate path: `/etc/letsencrypt/live/image.zuiying.shop/fullchain.pem`.
-- Key path: `/etc/letsencrypt/live/image.zuiying.shop/privkey.pem`.
-- Certbot renewal uses webroot `/var/www/letsencrypt`.
-- Certificate observed expiry: `2026-08-06 06:41:35+00:00`.
-- `certbot.timer` is enabled and active on HK.
+- HK certificate path: `/etc/letsencrypt/live/image.zuiying.shop/fullchain.pem`.
+- HK key path: `/etc/letsencrypt/live/image.zuiying.shop/privkey.pem`.
+- Source certificate path: `/etc/letsencrypt/live/image-origin.zuiying.shop/fullchain.pem`.
+- Source key path: `/etc/letsencrypt/live/image-origin.zuiying.shop/privkey.pem`.
+- Source certificate observed expiry: `2026-08-06`.
+
+Cleaned previous attempts:
+- Source SSH reverse tunnel service `/etc/systemd/system/gpt2api-hk-tunnel.service` was disabled and removed.
+- Source local SSH key `/home/ubuntu/.ssh/gpt2api_hk_ed25519` and `.pub` were removed.
+- HK `authorized_keys` entry with comment `gpt2api-hk-origin` was removed.
+- HK temporary sshd config `/etc/ssh/sshd_config.d/99-gpt2api-pubkey.conf` was removed.
+- Source WireGuard files `/etc/wireguard/wg-gpt2api.conf` and `/etc/wireguard/wg-gpt2api.key` were removed.
+- HK WireGuard files `/etc/wireguard/wg-gpt2api.conf` and `/etc/wireguard/wg-gpt2api.key` were removed.
+- HK old loopback tunnel ports `27080`, `27088`, `27200` are no longer used.
+- HK old Nginx map `/etc/nginx/conf.d/gpt2api_ws_upgrade_map.conf` was removed.
 
 Verification commands:
 
 ```bash
-systemctl is-active gpt2api-hk-tunnel.service
-ssh -i ~/.ssh/gpt2api_hk_ed25519 -o IdentitiesOnly=yes root@69.165.73.30 'ss -ltnp | grep -E ":(27080|27088|27200)\b"'
+curl -sS -I https://image-origin.zuiying.shop/
+curl -sS https://image-origin.zuiying.shop/api/v1/ping
+curl -sS https://image-origin.zuiying.shop/admin/api/v1/ping
+curl -sS https://image-origin.zuiying.shop/v1/health
 curl -sS -I https://image.zuiying.shop/
 curl -sS -I https://image.zuiying.shop/admin
 curl -sS https://image.zuiying.shop/api/v1/ping
@@ -175,10 +185,9 @@ curl -sS https://image.zuiying.shop/v1/health
 ```
 
 Expected key results:
-- `gpt2api-hk-tunnel.service` is `active`.
-- HK loopback ports `27080`, `27088`, `27200` are listened by `sshd`.
-- `/` returns user SPA HTML.
-- `/admin` returns `302` to `/admin/`.
+- `image-origin.zuiying.shop` direct origin returns user SPA HTML.
+- `image.zuiying.shop` through HK returns user SPA HTML.
+- `/admin` on HK returns redirect to `https://image.zuiying.shop/admin/`, not to `image-origin.zuiying.shop`.
 - `/api/v1/ping` returns `{"pong":true}`.
 - `/admin/api/v1/ping` returns `{"pong":true,"scope":"admin"}`.
 - `/v1/health` returns `{"ok":true}`.
@@ -187,7 +196,7 @@ Expected key results:
 Security notes:
 - Do not write the HK root password into repository files, docs, shell history, or process arguments.
 - Since the password was shared in chat, rotate the HK root password after confirming there is a separate recovery path or key login.
-- The active SSH tunnel uses remote loopback bind only. Do not change it to `0.0.0.0` unless the HK Nginx design is intentionally changed.
+- The origin domain is publicly reachable by design. If origin bypass must be prevented later, add source firewall rules or application-level checks that only allow HK回源.
 
 ## 3. GPT Image 2 生成链路
 
