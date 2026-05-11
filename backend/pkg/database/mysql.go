@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
-	"github.com/kleinai/backend/pkg/config"
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/zuiyinggg/image2api/backend/pkg/config"
+	"github.com/zuiyinggg/image2api/backend/pkg/logger"
 )
 
 // NewMySQL 用 GORM 创建 MySQL 连接（含连接池配置与慢查询日志）。

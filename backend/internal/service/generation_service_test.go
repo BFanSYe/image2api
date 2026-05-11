@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
 )
 
 func TestProviderCooldownGrokForbiddenIsTransient(t *testing.T) {
@@ -112,7 +112,7 @@ func TestShouldUseGPTWebRouteUsesNativeRouteForHighResolution(t *testing.T) {
 
 func TestCacheDataURLAssetKeepsJPEGExtension(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("KLEIN_STORAGE_ROOT", tmp)
+	t.Setenv("IMAGE2API_STORAGE_ROOT", tmp)
 
 	dataURL := "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString([]byte("not-a-real-jpeg"))
 	s := &GenerationService{}

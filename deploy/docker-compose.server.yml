@@ -1,5 +1,5 @@
 # =====================================================
-# KleinAI · 单机服务器容器栈（真实 provider）
+# image2api · 单机服务器容器栈（真实 provider）
 #
 # 启动：
 #   cd deploy
@@ -18,34 +18,34 @@
 # =====================================================
 
 x-backend-env: &backend-env
-  KLEIN_ENV: dev
-  KLEIN_DB_DSN: klein:klein123@tcp(mysql:3306)/klein_ai?charset=utf8mb4&parseTime=True&loc=Local
-  KLEIN_REDIS_ADDR: redis:6379
-  KLEIN_REDIS_PASSWORD: ''
-  KLEIN_REDIS_DB: '0'
-  KLEIN_JWT_SECRET: local-dev-jwt-secret-32bytes-please-change
-  KLEIN_JWT_REFRESH_SECRET: local-dev-jwt-refresh-secret-32bytes-please
-  KLEIN_JWT_ACCESS_TTL: 2h
-  KLEIN_JWT_REFRESH_TTL: 336h
-  KLEIN_AES_KEY: '00000000000000000000000000000000'
-  KLEIN_PROVIDER_GPT: real
-  KLEIN_PROVIDER_GROK: real
-  KLEIN_OPENAI_BASE: https://api.openai.com
-  KLEIN_GROK_BASE: https://api.x.ai
-  KLEIN_GPT_BASE_URL: https://api.openai.com
-  KLEIN_GROK_BASE_URL: https://grok.com
-  KLEIN_GROK_CF_STATE_PATH: /app/storage/grok_cf.json
-  KLEIN_GROK_UPLOAD_NORMALIZE_JPEG: 'true'
-  KLEIN_GROK_DYNAMIC_STATSIG: 'true'
-  KLEIN_LOG_LEVEL: info
-  KLEIN_LOG_DIR: /app/logs
-  KLEIN_CORS_ORIGINS: http://localhost:17080,http://localhost:17088,http://127.0.0.1:17080,http://127.0.0.1:17088,http://167.88.180.191:17080,http://167.88.180.191:17088
+  IMAGE2API_ENV: dev
+  IMAGE2API_DB_DSN: image2api:image2api123@tcp(mysql:3306)/image2api?charset=utf8mb4&parseTime=True&loc=Local
+  IMAGE2API_REDIS_ADDR: redis:6379
+  IMAGE2API_REDIS_PASSWORD: ''
+  IMAGE2API_REDIS_DB: '0'
+  IMAGE2API_JWT_SECRET: local-dev-jwt-secret-32bytes-please-change
+  IMAGE2API_JWT_REFRESH_SECRET: local-dev-jwt-refresh-secret-32bytes-please
+  IMAGE2API_JWT_ACCESS_TTL: 2h
+  IMAGE2API_JWT_REFRESH_TTL: 336h
+  IMAGE2API_AES_KEY: '00000000000000000000000000000000'
+  IMAGE2API_PROVIDER_GPT: real
+  IMAGE2API_PROVIDER_GROK: real
+  IMAGE2API_OPENAI_BASE: https://api.openai.com
+  IMAGE2API_GROK_BASE: https://api.x.ai
+  IMAGE2API_GPT_BASE_URL: https://api.openai.com
+  IMAGE2API_GROK_BASE_URL: https://grok.com
+  IMAGE2API_GROK_CF_STATE_PATH: /app/storage/grok_cf.json
+  IMAGE2API_GROK_UPLOAD_NORMALIZE_JPEG: 'true'
+  IMAGE2API_GROK_DYNAMIC_STATSIG: 'true'
+  IMAGE2API_LOG_LEVEL: info
+  IMAGE2API_LOG_DIR: /app/logs
+  IMAGE2API_CORS_ORIGINS: http://localhost:17080,http://localhost:17088,http://127.0.0.1:17080,http://127.0.0.1:17088,http://167.88.180.191:17080,http://167.88.180.191:17088
   TZ: Asia/Shanghai
 
 services:
   mysql:
     image: mysql:8.0
-    container_name: klein-mysql-dev
+    container_name: image2api-mysql-dev
     restart: unless-stopped
     command:
       - --default-authentication-plugin=caching_sha2_password
@@ -57,55 +57,55 @@ services:
       - --max-binlog-size=64M
       - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
     environment:
-      MYSQL_ROOT_PASSWORD: klein-root-dev
-      MYSQL_DATABASE: klein_ai
-      MYSQL_USER: klein
-      MYSQL_PASSWORD: klein123
+      MYSQL_ROOT_PASSWORD: image2api-root-dev
+      MYSQL_DATABASE: image2api
+      MYSQL_USER: image2api
+      MYSQL_PASSWORD: image2api123
       TZ: Asia/Shanghai
     ports:
-      - "127.0.0.1:${KLEIN_DEV_MYSQL_PORT:-23306}:3306"
+      - "127.0.0.1:${IMAGE2API_DEV_MYSQL_PORT:-23306}:3306"
     volumes:
-      - klein-mysql-dev-data:/var/lib/mysql
+      - image2api-mysql-dev-data:/var/lib/mysql
       - ./mysql-init/01-run-migrations.sh:/docker-entrypoint-initdb.d/01-run-migrations.sh:ro
       - ../backend/migrations:/migrations:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pklein-root-dev"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pimage2api-root-dev"]
       interval: 10s
       timeout: 5s
       retries: 10
-    networks: [klein-dev]
+    networks: [image2api-dev]
 
   redis:
     image: redis:7-alpine
-    container_name: klein-redis-dev
+    container_name: image2api-redis-dev
     restart: unless-stopped
     command: redis-server --appendonly yes
     ports:
-      - "127.0.0.1:${KLEIN_DEV_REDIS_PORT:-16379}:6379"
+      - "127.0.0.1:${IMAGE2API_DEV_REDIS_PORT:-16379}:6379"
     volumes:
-      - klein-redis-dev-data:/data
+      - image2api-redis-dev-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
-    networks: [klein-dev]
+    networks: [image2api-dev]
 
   # ---------- 4 个后端 cmd ----------
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: klein-flaresolverr-dev
+    container_name: image2api-flaresolverr-dev
     restart: unless-stopped
     environment:
       LOG_LEVEL: info
       TZ: Asia/Shanghai
     ports:
       - "127.0.0.1:18191:8191"
-    networks: [klein-dev]
+    networks: [image2api-dev]
 
   api:
-    image: kleinai/backend:dev
-    container_name: klein-api-dev
+    image: image2api/backend:dev
+    container_name: image2api-api-dev
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -113,7 +113,7 @@ services:
     user: "0:0"            # 复用同一镜像同一卷写日志，方便起见 dev 用 root
     environment:
       <<: *backend-env
-      KLEIN_NODE_ID: '1'
+      IMAGE2API_NODE_ID: '1'
     ports:
       - "127.0.0.1:17180:17180"
     healthcheck:
@@ -122,23 +122,23 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - klein-logs:/app/logs
-      - klein-storage:/app/storage
+      - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       mysql: { condition: service_healthy }
       redis: { condition: service_healthy }
       flaresolverr: { condition: service_started }
-    networks: [klein-dev]
+    networks: [image2api-dev]
     restart: unless-stopped
 
   admin:
-    image: kleinai/backend:dev
-    container_name: klein-admin-dev
+    image: image2api/backend:dev
+    container_name: image2api-admin-dev
     entrypoint: ["/app/admin"]
     user: "0:0"
     environment:
       <<: *backend-env
-      KLEIN_NODE_ID: '2'
+      IMAGE2API_NODE_ID: '2'
     ports:
       - "127.0.0.1:17188:17188"
     healthcheck:
@@ -147,21 +147,21 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - klein-logs:/app/logs
-      - klein-storage:/app/storage
+      - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       api: { condition: service_started }
-    networks: [klein-dev]
+    networks: [image2api-dev]
     restart: unless-stopped
 
   openai:
-    image: kleinai/backend:dev
-    container_name: klein-openai-dev
+    image: image2api/backend:dev
+    container_name: image2api-openai-dev
     entrypoint: ["/app/openai"]
     user: "0:0"
     environment:
       <<: *backend-env
-      KLEIN_NODE_ID: '3'
+      IMAGE2API_NODE_ID: '3'
     ports:
       - "127.0.0.1:17200:17200"
     healthcheck:
@@ -170,35 +170,35 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - klein-logs:/app/logs
-      - klein-storage:/app/storage
+      - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       api: { condition: service_started }
-    networks: [klein-dev]
+    networks: [image2api-dev]
     restart: unless-stopped
 
   worker:
-    image: kleinai/backend:dev
-    container_name: klein-worker-dev
+    image: image2api/backend:dev
+    container_name: image2api-worker-dev
     entrypoint: ["/app/worker"]
     user: "0:0"
     environment:
       <<: *backend-env
-      KLEIN_NODE_ID: '4'
+      IMAGE2API_NODE_ID: '4'
     volumes:
-      - klein-logs:/app/logs
-      - klein-storage:/app/storage
+      - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       mysql: { condition: service_healthy }
       redis: { condition: service_healthy }
       flaresolverr: { condition: service_started }
-    networks: [klein-dev]
+    networks: [image2api-dev]
     restart: unless-stopped
 
   # ---------- 前端静态 + 反代 ----------
   user-web:
-    image: kleinai/user-web:dev
-    container_name: klein-user-web-dev
+    image: image2api/user-web:dev
+    container_name: image2api-user-web-dev
     build:
       context: ../frontend
       dockerfile: apps/user/Dockerfile
@@ -208,12 +208,12 @@ services:
       # 覆盖镜像内自带的 nginx.conf，加入 /api 与 /v1 反代
       - ./nginx-dev/user-web.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on: [api, openai]
-    networks: [klein-dev]
+    networks: [image2api-dev]
     restart: unless-stopped
 
   admin-web:
-    image: kleinai/admin-web:dev
-    container_name: klein-admin-web-dev
+    image: image2api/admin-web:dev
+    container_name: image2api-admin-web-dev
     build:
       context: ../frontend
       dockerfile: apps/admin/Dockerfile
@@ -222,31 +222,31 @@ services:
     volumes:
       - ./nginx-dev/admin-web.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on: [admin]
-    networks: [klein-dev]
+    networks: [image2api-dev]
     restart: unless-stopped
 
   edge:
     image: caddy:2-alpine
-    container_name: klein-edge-dev
+    container_name: image2api-edge-dev
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - klein-caddy-data:/data
-      - klein-caddy-config:/config
+      - image2api-caddy-data:/data
+      - image2api-caddy-config:/config
     depends_on: [user-web]
-    networks: [klein-dev]
+    networks: [image2api-dev]
     restart: unless-stopped
 
 volumes:
-  klein-mysql-dev-data:
-  klein-redis-dev-data:
-  klein-logs:
-  klein-storage:
-  klein-caddy-data:
-  klein-caddy-config:
+  image2api-mysql-dev-data:
+  image2api-redis-dev-data:
+  image2api-logs:
+  image2api-storage:
+  image2api-caddy-data:
+  image2api-caddy-config:
 
 networks:
-  klein-dev:
-    name: klein-dev-net
+  image2api-dev:
+    name: image2api-dev-net

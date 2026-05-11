@@ -13,7 +13,7 @@ import axios, {
 
 import type { ApiBody, TokenPair } from './types';
 
-const TOKEN_KEY = 'klein:token';
+const TOKEN_KEY = 'image2api:token';
 
 export interface StoredToken {
   access: string;

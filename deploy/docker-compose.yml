@@ -1,27 +1,27 @@
 # =====================================================
-# KleinAI · 单机生产 docker-compose
+# image2api · 单机生产 docker-compose
 # 启动：docker compose --env-file ./env/.env.local up -d
 # 端口策略见 docs/01-开发规范-总览.md §端口规范
 # =====================================================
 
 x-common-env: &common-env
-  KLEIN_ENV: ${KLEIN_ENV:-prod}
-  KLEIN_DB_DSN: ${KLEIN_DB_DSN}
-  KLEIN_REDIS_ADDR: ${KLEIN_REDIS_ADDR:-redis:6379}
-  KLEIN_REDIS_PASSWORD: ${KLEIN_REDIS_PASSWORD:-}
-  KLEIN_JWT_SECRET: ${KLEIN_JWT_SECRET}
-  KLEIN_JWT_REFRESH_SECRET: ${KLEIN_JWT_REFRESH_SECRET}
-  KLEIN_AES_KEY: ${KLEIN_AES_KEY}
-  KLEIN_OPENAI_BASE: ${KLEIN_OPENAI_BASE:-https://api.openai.com}
-  KLEIN_GROK_BASE: ${KLEIN_GROK_BASE:-https://api.x.ai}
-  KLEIN_CORS_ORIGINS: ${KLEIN_CORS_ORIGINS}
-  KLEIN_LOG_DIR: /app/logs
+  IMAGE2API_ENV: ${IMAGE2API_ENV:-prod}
+  IMAGE2API_DB_DSN: ${IMAGE2API_DB_DSN}
+  IMAGE2API_REDIS_ADDR: ${IMAGE2API_REDIS_ADDR:-redis:6379}
+  IMAGE2API_REDIS_PASSWORD: ${IMAGE2API_REDIS_PASSWORD:-}
+  IMAGE2API_JWT_SECRET: ${IMAGE2API_JWT_SECRET}
+  IMAGE2API_JWT_REFRESH_SECRET: ${IMAGE2API_JWT_REFRESH_SECRET}
+  IMAGE2API_AES_KEY: ${IMAGE2API_AES_KEY}
+  IMAGE2API_OPENAI_BASE: ${IMAGE2API_OPENAI_BASE:-https://api.openai.com}
+  IMAGE2API_GROK_BASE: ${IMAGE2API_GROK_BASE:-https://api.x.ai}
+  IMAGE2API_CORS_ORIGINS: ${IMAGE2API_CORS_ORIGINS}
+  IMAGE2API_LOG_DIR: /app/logs
   TZ: Asia/Shanghai
 
 services:
   mysql:
     image: mysql:8.0
-    container_name: klein-mysql
+    container_name: image2api-mysql
     restart: always
     command:
       - --default-authentication-plugin=caching_sha2_password
@@ -31,14 +31,14 @@ services:
       - --max_connections=300
       - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
     environment:
-      MYSQL_ROOT_PASSWORD: ${KLEIN_MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${KLEIN_MYSQL_DB:-klein_ai}
-      MYSQL_USER: ${KLEIN_MYSQL_USER:-klein}
-      MYSQL_PASSWORD: ${KLEIN_MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${IMAGE2API_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${IMAGE2API_MYSQL_DB:-image2api}
+      MYSQL_USER: ${IMAGE2API_MYSQL_USER:-image2api}
+      MYSQL_PASSWORD: ${IMAGE2API_MYSQL_PASSWORD}
     ports:
-      - "127.0.0.1:${KLEIN_MYSQL_PORT:-13306}:3306"
+      - "127.0.0.1:${IMAGE2API_MYSQL_PORT:-13306}:3306"
     volumes:
-      - klein-mysql-data:/var/lib/mysql
+      - image2api-mysql-data:/var/lib/mysql
       # 首次初始化时执行 goose Up 段，避免 mysql 直接执行 Down 把表删空
       - ./mysql-init/01-run-migrations.sh:/docker-entrypoint-initdb.d/01-run-migrations.sh:ro
       - ../backend/migrations:/migrations:ro
@@ -46,37 +46,37 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       retries: 6
-    networks: [klein]
+    networks: [image2api]
 
   redis:
     image: redis:7-alpine
-    container_name: klein-redis
+    container_name: image2api-redis
     restart: always
-    command: redis-server --appendonly yes ${KLEIN_REDIS_PASSWORD:+--requirepass ${KLEIN_REDIS_PASSWORD}}
+    command: redis-server --appendonly yes ${IMAGE2API_REDIS_PASSWORD:+--requirepass ${IMAGE2API_REDIS_PASSWORD}}
     ports:
-      - "127.0.0.1:${KLEIN_REDIS_PORT:-16379}:6379"
+      - "127.0.0.1:${IMAGE2API_REDIS_PORT:-16379}:6379"
     volumes:
-      - klein-redis-data:/data
+      - image2api-redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       retries: 6
-    networks: [klein]
+    networks: [image2api]
 
   api:
-    image: kleinai/backend:latest
+    image: image2api/backend:latest
     build:
       context: ../backend
       dockerfile: Dockerfile
-    container_name: klein-api
+    container_name: image2api-api
     restart: always
     command: ["/app/api"]
     environment:
       <<: *common-env
-      KLEIN_NODE_ID: 1
+      IMAGE2API_NODE_ID: 1
     expose: ["17180"]
     volumes:
-      - klein-logs:/app/logs
+      - image2api-logs:/app/logs
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -88,19 +88,19 @@ services:
     deploy:
       resources:
         limits: { cpus: '2', memory: 1G }
-    networks: [klein]
+    networks: [image2api]
 
   admin:
-    image: kleinai/backend:latest
-    container_name: klein-admin
+    image: image2api/backend:latest
+    container_name: image2api-admin
     restart: always
     command: ["/app/admin"]
     environment:
       <<: *common-env
-      KLEIN_NODE_ID: 2
+      IMAGE2API_NODE_ID: 2
     expose: ["17188"]
     volumes:
-      - klein-logs:/app/logs
+      - image2api-logs:/app/logs
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -112,19 +112,19 @@ services:
     deploy:
       resources:
         limits: { cpus: '1', memory: 512M }
-    networks: [klein]
+    networks: [image2api]
 
   openai:
-    image: kleinai/backend:latest
-    container_name: klein-openai
+    image: image2api/backend:latest
+    container_name: image2api-openai
     restart: always
     command: ["/app/openai"]
     environment:
       <<: *common-env
-      KLEIN_NODE_ID: 3
+      IMAGE2API_NODE_ID: 3
     expose: ["17200"]
     volumes:
-      - klein-logs:/app/logs
+      - image2api-logs:/app/logs
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -136,66 +136,66 @@ services:
     deploy:
       resources:
         limits: { cpus: '2', memory: 1G }
-    networks: [klein]
+    networks: [image2api]
 
   worker:
-    image: kleinai/backend:latest
-    container_name: klein-worker
+    image: image2api/backend:latest
+    container_name: image2api-worker
     restart: always
     command: ["/app/worker"]
     environment:
       <<: *common-env
-      KLEIN_NODE_ID: 4
+      IMAGE2API_NODE_ID: 4
     volumes:
-      - klein-logs:/app/logs
+      - image2api-logs:/app/logs
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
     deploy:
       resources:
         limits: { cpus: '2', memory: 1G }
-    networks: [klein]
+    networks: [image2api]
 
   user-web:
-    image: kleinai/user-web:latest
+    image: image2api/user-web:latest
     build:
       context: ../frontend
       dockerfile: apps/user/Dockerfile
-    container_name: klein-user-web
+    container_name: image2api-user-web
     restart: always
     expose: ["80"]
-    networks: [klein]
+    networks: [image2api]
 
   admin-web:
-    image: kleinai/admin-web:latest
+    image: image2api/admin-web:latest
     build:
       context: ../frontend
       dockerfile: apps/admin/Dockerfile
-    container_name: klein-admin-web
+    container_name: image2api-admin-web
     restart: always
     expose: ["80"]
-    networks: [klein]
+    networks: [image2api]
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: klein-nginx
+    container_name: image2api-nginx
     restart: always
     depends_on: [api, admin, openai, user-web, admin-web]
     ports:
-      - "${KLEIN_USER_WEB_PORT:-17080}:17080"
-      - "${KLEIN_ADMIN_WEB_PORT:-17088}:17088"
-      - "${KLEIN_OPENAI_PORT:-17200}:17200"
+      - "${IMAGE2API_USER_WEB_PORT:-17080}:17080"
+      - "${IMAGE2API_ADMIN_WEB_PORT:-17088}:17088"
+      - "${IMAGE2API_OPENAI_PORT:-17200}:17200"
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
       - ./certs:/etc/nginx/certs:ro
-      - klein-logs:/var/log/nginx
-    networks: [klein]
+      - image2api-logs:/var/log/nginx
+    networks: [image2api]
 
 volumes:
-  klein-mysql-data:
-  klein-redis-data:
-  klein-logs:
+  image2api-mysql-data:
+  image2api-redis-data:
+  image2api-logs:
 
 networks:
-  klein:
-    name: klein-net
+  image2api:
+    name: image2api-net

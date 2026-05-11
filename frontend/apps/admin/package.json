@@ -1,5 +1,5 @@
 {
-  "name": "@kleinai/admin",
+  "name": "@image2api/admin",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
-    "@kleinai/theme": "workspace:*",
+    "@image2api/theme": "workspace:*",
     "@tanstack/react-query": "^5.51.5",
     "axios": "^1.7.2",
     "clsx": "^2.1.1",

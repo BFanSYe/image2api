@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kleinai/backend/internal/dto"
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/crypto"
-	"github.com/kleinai/backend/pkg/errcode"
+	"github.com/zuiyinggg/image2api/backend/internal/dto"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/repo"
+	"github.com/zuiyinggg/image2api/backend/pkg/crypto"
+	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
 )
 
 // APIKeyService 用户 API Key。
@@ -24,7 +24,7 @@ type APIKeyService struct {
 func NewAPIKeyService(r *repo.APIKeyRepo) *APIKeyService { return &APIKeyService{repo: r} }
 
 // Prefix 用户 Key 前缀；OpenAI 兼容场景下习惯使用 `sk-` 风格。
-const KeyPrefix = "sk-klein-"
+const KeyPrefix = "sk-image2api-"
 
 // Create 创建一个用户 Key。明文仅返回一次。
 func (s *APIKeyService) Create(ctx context.Context, userID uint64, req *dto.APIKeyCreateReq) (*dto.APIKeyCreateResp, error) {
@@ -136,9 +136,9 @@ func (s *APIKeyService) Delete(ctx context.Context, userID, id uint64) error {
 // Verify 通过明文 key 验证 → 返回 model.APIKey。
 //
 // 算法：
-//   1. 校验前缀（拒绝明显非法的请求 Key，避免每次都查 DB）；
-//   2. 暴力查 DB（hash 列有唯一索引）；为了拿 salt，需先做候选查询：
-//      实际策略：用 last4 + prefix 做候选查询，再逐个 SHA256(plain+salt) 校验。
+//  1. 校验前缀（拒绝明显非法的请求 Key，避免每次都查 DB）；
+//  2. 暴力查 DB（hash 列有唯一索引）；为了拿 salt，需先做候选查询：
+//     实际策略：用 last4 + prefix 做候选查询，再逐个 SHA256(plain+salt) 校验。
 //
 // 这里出于性能与简单考虑：直接基于 hash 列做查找，
 // 但 hash = SHA256(plain + salt)，salt 不固定，因此真实流程必须先取候选列表。

@@ -1,7 +1,7 @@
 // Package grok 实现 GROK 风格的视频生成 provider。
 //
 // GROK 公开 API 仍在演进中，本 provider 采用一个通用的"异步任务 + 轮询"协议，
-// 你可以把 base_url 指到任意兼容网关（kleinai-gateway / FAL / Runway 风格）：
+// 你可以把 base_url 指到任意兼容网关（image2api-gateway / FAL / Runway 风格）：
 //
 //	POST {base_url}/v1/videos/generations
 //	     Authorization: Bearer {api_key}
@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kleinai/backend/internal/provider"
+	"github.com/zuiyinggg/image2api/backend/internal/provider"
 )
 
 const (
@@ -233,7 +233,7 @@ func (p *Provider) do(ctx context.Context, method, url string, payload []byte, k
 	if payload != nil {
 		httpReq.Header.Set("Content-Type", "application/json")
 	}
-	httpReq.Header.Set("User-Agent", "kleinai/1.0")
+	httpReq.Header.Set("User-Agent", "image2api/1.0")
 
 	resp, err := p.client.Do(httpReq)
 	if err != nil {

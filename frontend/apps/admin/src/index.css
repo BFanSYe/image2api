@@ -1,4 +1,4 @@
-@import '@kleinai/theme/components.css';
+@import '@image2api/theme/components.css';
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 /* ===========================================================
    admin app · 仅保留站点级覆盖；
-   按钮 / 表单 / 卡片 / 文字 等统一在 @kleinai/theme/components.css
+   按钮 / 表单 / 卡片 / 文字 等统一在 @image2api/theme/components.css
    =========================================================== */
 
 @layer base {

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  KleinAI - bring up local dev environment.
+  image2api - bring up local dev environment.
 
 .DESCRIPTION
   - Start docker compose dev stack: MySQL(13306) + Redis(16379)
@@ -22,7 +22,7 @@ $ErrorActionPreference = 'Stop'
 $ROOT = Split-Path -Parent $PSScriptRoot
 
 Write-Host '==============================================' -ForegroundColor Cyan
-Write-Host ' KleinAI dev environment' -ForegroundColor Cyan
+Write-Host ' image2api dev environment' -ForegroundColor Cyan
 Write-Host '==============================================' -ForegroundColor Cyan
 
 # ---------- 1. docker compose ----------
@@ -41,7 +41,7 @@ Write-Host ''
 Write-Host '[2/4] waiting for MySQL to become healthy ...' -ForegroundColor Yellow
 $ready = $false
 for ($i = 1; $i -le 60; $i++) {
-  $state = docker inspect --format '{{json .State.Health.Status}}' klein-mysql-dev 2>$null
+  $state = docker inspect --format '{{json .State.Health.Status}}' image2api-mysql-dev 2>$null
   if ($state -match 'healthy') {
     Write-Host ('  -> healthy after ' + $i + 's') -ForegroundColor Green
     $ready = $true
@@ -50,7 +50,7 @@ for ($i = 1; $i -le 60; $i++) {
   Start-Sleep -Seconds 1
 }
 if (-not $ready) {
-  Write-Warning 'MySQL did not become healthy in 60s. Run: docker logs klein-mysql-dev'
+  Write-Warning 'MySQL did not become healthy in 60s. Run: docker logs image2api-mysql-dev'
 }
 
 # ---------- 3. backend env ----------
@@ -83,7 +83,7 @@ if (-not $NoBackend) {
   $backendPath = (Join-Path $ROOT 'backend').Replace('\','/')
 
   foreach ($c in $cmds) {
-    $title = 'klein-' + $c.Name
+    $title = 'image2api-' + $c.Name
     $bodyLines = @(
       ('$Host.UI.RawUI.WindowTitle = "' + $title + '"'),
       ('Set-Location "' + $backendPath + '"'),
@@ -93,7 +93,7 @@ if (-not $NoBackend) {
       '    [Environment]::SetEnvironmentVariable($kv[0].Trim(), $kv[1].Trim())',
       '  }',
       '}',
-      ('Write-Host ">>> klein ' + $c.Name + '" -ForegroundColor Cyan'),
+      ('Write-Host ">>> image2api ' + $c.Name + '" -ForegroundColor Cyan'),
       ('go run ' + $c.Path)
     )
     $body = $bodyLines -join "`n"
@@ -117,11 +117,11 @@ Write-Host @'
   user app (Vite 5173):
     cd frontend
     pnpm install                          # first time only
-    pnpm --filter @kleinai/user dev
+    pnpm --filter @image2api/user dev
 
   admin app (Vite 5174):
     cd frontend
-    pnpm --filter @kleinai/admin dev
+    pnpm --filter @image2api/admin dev
 
   Open in browser:
     user      : http://localhost:5173

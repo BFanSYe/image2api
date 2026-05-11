@@ -1,9 +1,9 @@
 // Package mock 提供方 stub：直接返回示意性 URL，不发起真实第三方请求。
 //
 // 用途：
-//   1. 本地开发未配真实账号时打通整链路；
-//   2. 测试 / CI；
-//   3. 演示。
+//  1. 本地开发未配真实账号时打通整链路；
+//  2. 测试 / CI；
+//  3. 演示。
 package mock
 
 import (
@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kleinai/backend/internal/provider"
+	"github.com/zuiyinggg/image2api/backend/internal/provider"
 )
 
 // New 构造。kind 标识自身角色（gpt / grok）。
@@ -85,5 +85,5 @@ func mockVideoURL(taskID string, seq int) string {
 	if id == "" {
 		id = "demo"
 	}
-	return fmt.Sprintf("https://kleinai.dev/mock/video/%s-%d.mp4", id, seq)
+	return fmt.Sprintf("https://image2api.dev/mock/video/%s-%d.mp4", id, seq)
 }

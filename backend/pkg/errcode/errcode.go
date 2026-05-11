@@ -85,33 +85,33 @@ var (
 	BodyTooLarge = &Error{Code: 400103, HTTP: 413, Msg: "请求体过大"}
 
 	// 401xxx 鉴权
-	Unauthorized = &Error{Code: 401101, HTTP: 401, Msg: "未登录"}
-	TokenExpired = &Error{Code: 401102, HTTP: 401, Msg: "登录已过期"}
-	TokenInvalid = &Error{Code: 401103, HTTP: 401, Msg: "登录凭证无效"}
+	Unauthorized  = &Error{Code: 401101, HTTP: 401, Msg: "未登录"}
+	TokenExpired  = &Error{Code: 401102, HTTP: 401, Msg: "登录已过期"}
+	TokenInvalid  = &Error{Code: 401103, HTTP: 401, Msg: "登录凭证无效"}
 	APIKeyInvalid = &Error{Code: 401104, HTTP: 401, Msg: "API Key 无效"}
 
 	// 403xxx 权限
-	Forbidden     = &Error{Code: 403101, HTTP: 403, Msg: "权限不足"}
-	IPNotAllowed  = &Error{Code: 403102, HTTP: 403, Msg: "IP 不在白名单"}
+	Forbidden    = &Error{Code: 403101, HTTP: 403, Msg: "权限不足"}
+	IPNotAllowed = &Error{Code: 403102, HTTP: 403, Msg: "IP 不在白名单"}
 
 	// 404xxx 资源不存在
 	UserNotFound    = &Error{Code: 404101, HTTP: 404, Msg: "用户不存在"}
 	ResourceMissing = &Error{Code: 404102, HTTP: 404, Msg: "资源不存在"}
 
 	// 409xxx 冲突 / 幂等
-	UserExists      = &Error{Code: 409101, HTTP: 409, Msg: "用户已存在"}
-	IdemConflict    = &Error{Code: 409102, HTTP: 409, Msg: "重复请求"}
-	DuplicatedPay   = &Error{Code: 409401, HTTP: 409, Msg: "重复支付"}
+	UserExists    = &Error{Code: 409101, HTTP: 409, Msg: "用户已存在"}
+	IdemConflict  = &Error{Code: 409102, HTTP: 409, Msg: "重复请求"}
+	DuplicatedPay = &Error{Code: 409401, HTTP: 409, Msg: "重复支付"}
 
 	// 429xxx 限流
-	RateLimited      = &Error{Code: 429101, HTTP: 429, Msg: "操作过于频繁"}
-	GenRateLimited   = &Error{Code: 429301, HTTP: 429, Msg: "创作频次超限"}
+	RateLimited    = &Error{Code: 429101, HTTP: 429, Msg: "操作过于频繁"}
+	GenRateLimited = &Error{Code: 429301, HTTP: 429, Msg: "创作频次超限"}
 
 	// 500xxx 系统错误
-	Internal     = &Error{Code: 500001, HTTP: 500, Msg: "系统繁忙"}
-	DBError      = &Error{Code: 500002, HTTP: 500, Msg: "数据库错误"}
-	CacheError   = &Error{Code: 500003, HTTP: 500, Msg: "缓存错误"}
-	JobDispatch  = &Error{Code: 500301, HTTP: 500, Msg: "任务调度失败"}
+	Internal    = &Error{Code: 500001, HTTP: 500, Msg: "系统繁忙"}
+	DBError     = &Error{Code: 500002, HTTP: 500, Msg: "数据库错误"}
+	CacheError  = &Error{Code: 500003, HTTP: 500, Msg: "缓存错误"}
+	JobDispatch = &Error{Code: 500301, HTTP: 500, Msg: "任务调度失败"}
 
 	// 502xxx 上游
 	GPTUnavailable  = &Error{Code: 502201, HTTP: 502, Msg: "GPT 服务暂不可用"}

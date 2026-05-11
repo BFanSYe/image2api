@@ -47,3 +47,34 @@ Thumbs.db
 
 # 大图素材原档（按需）
 /assets/raw/
+
+# Runtime data
+storage/
+uploads/
+generated/
+cache/
+tmp/
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
+*.tar
+*.tgz
+*.zip
+
+# Secrets / certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+*.mobileprovision
+
+# Local deploy overrides
+Dockerfile.local
+docker-compose.override.yml
+deploy/**/*.local.yml
+deploy/env/.env.local

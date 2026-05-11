@@ -3,7 +3,7 @@ services:
     profiles: [disabled]
   api:
     environment: &prod-env
-      KLEIN_ENV: prod
+      IMAGE2API_ENV: prod
       GIN_MODE: release
   admin:
     environment: *prod-env

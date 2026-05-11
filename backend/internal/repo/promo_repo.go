@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
 )
 
 type PromoRepo struct{ db *gorm.DB }

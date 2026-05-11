@@ -1,10 +1,10 @@
-# gpt2api 开发进度看板
+# image2api 开发进度看板
 
 > 最近更新：2026-04-27（UX 调优后）
 > 主文档：`[README.md](./README.md)` · 规范：`[docs/](./docs/)` · 常驻 AI 规则：`.cursor/rules/`
 >
 > **项目定位**：基于 GPT / GROK 双账号池的高并发 AIGC 平台，OpenAI 协议兼容；前端 React + Tailwind，后端 Go + MySQL + Redis。
-> **皮肤规范**：默认主题 = 「克莱因蓝（Klein Blue · IKB `#002FA7`）」，仅作为视觉皮肤通过 `packages/theme` token 集中管理，可在 `tokens.css` 切换为其它色板而不影响业务代码。代码内部 module/包名 `@kleinai/`* 保留作为既有命名空间，不外露给最终用户。
+> **皮肤规范**：默认主题 = 「image2api Blue（image2api Blue · IKB `#002FA7`）」，仅作为视觉皮肤通过 `packages/theme` token 集中管理，可在 `tokens.css` 切换为其它色板而不影响业务代码。代码内部 module/包名 `@image2api/`* 保留作为既有命名空间，不外露给最终用户。
 
 ---
 
@@ -19,7 +19,7 @@
 ```powershell
 # 首次构建镜像（≈ 5–8 分钟，分别打 backend / user-web / admin-web 三个镜像）
 cd deploy
-$env:KLEIN_DEV_MYSQL_PORT='23306'   # 仅当 13306 被 Hyper-V 占用时设置
+$env:IMAGE2API_DEV_MYSQL_PORT='23306'   # 仅当 13306 被 Hyper-V 占用时设置
 docker compose -f docker-compose.dev-full.yml up -d --build
 
 # 之后日常启动 / 关停
@@ -54,15 +54,15 @@ pwsh ./scripts/dev-up.ps1
 # 起前端（首次需 pnpm install）
 cd frontend
 pnpm install
-pnpm --filter @kleinai/user  dev   # → http://localhost:5173
-pnpm --filter @kleinai/admin dev   # → http://localhost:5174
+pnpm --filter @image2api/user  dev   # → http://localhost:5173
+pnpm --filter @image2api/admin dev   # → http://localhost:5174
 
 # 关停
 pwsh ./scripts/dev-down.ps1
 ```
 
-> 两种模式默认都用 `KLEIN_PROVIDER_GPT/GROK=mock`，无需真实 OpenAI / GROK 凭证即可走通生成全流程。
-> 切真实通道：模式 A 改 `deploy/docker-compose.dev-full.yml` 里的 `KLEIN_PROVIDER_*=real`；模式 B 改 `backend/.env.local`。
+> 两种模式默认都用 `IMAGE2API_PROVIDER_GPT/GROK=mock`，无需真实 OpenAI / GROK 凭证即可走通生成全流程。
+> 切真实通道：模式 A 改 `deploy/docker-compose.dev-full.yml` 里的 `IMAGE2API_PROVIDER_*=real`；模式 B 改 `backend/.env.local`。
 > 真实凭证一律走 **管理后台 → Token 管理** 入库（AES-256-GCM 落盘）。
 
 **Windows 上 13306 / 16379 端口被 Hyper-V 占用怎么办？**
@@ -73,7 +73,7 @@ netsh interface ipv4 show excludedportrange protocol=tcp
 # 临时释放（需管理员，重启后失效）
 net stop winnat
 net start winnat
-# 或：模式 A 直接 $env:KLEIN_DEV_MYSQL_PORT='23306' 后再 up
+# 或：模式 A 直接 $env:IMAGE2API_DEV_MYSQL_PORT='23306' 后再 up
 # 或：模式 B 改 deploy/docker-compose.dev.yml + backend/.env.local 的 DSN
 ```
 
@@ -166,7 +166,7 @@ net start winnat
 
 - `api_key` 模型 + repo（hash + salt + last4）
 - 用户端 CRUD：list / create（明文仅返回一次）/ toggle / delete
-- `AuthAPIKey` 中间件：`Authorization: Bearer sk-klein-xxx`
+- `AuthAPIKey` 中间件：`Authorization: Bearer sk-image2api-xxx`
 - OpenAI 兼容服务挂入鉴权 + scope 校验
 
 ---
@@ -233,7 +233,7 @@ net start winnat
   - 空态/骨架：`empty-state(-icon|title|desc) / skeleton(-text)`
   - 页面骨架：`page / page-narrow / page-wide / page-header / page-title / page-subtitle / section / section-header / section-title`
 - **Tailwind preset**：暴露所有新 token 为原子类（`bg-info-soft`、`text-tiny`、`font-extra`、`tracking-wide`、`shadow-4`、`duration-base`、`ease-out` 等）。
-- **入口收敛**：在 `apps/{user,admin}/src/index.css` 顶部 `@import '@kleinai/theme/components.css'`，确保 `@layer components` 与 `@apply` 在同一 PostCSS 上下文；本地 `index.css` 只保留 `body line-height` 与 `.creative-pane / .admin-pane` 等页面级覆盖。
+- **入口收敛**：在 `apps/{user,admin}/src/index.css` 顶部 `@import '@image2api/theme/components.css'`，确保 `@layer components` 与 `@apply` 在同一 PostCSS 上下文；本地 `index.css` 只保留 `body line-height` 与 `.creative-pane / .admin-pane` 等页面级覆盖。
 - **页面重构**（用户端）：`LoginPage / RegisterPage / CreateImagePage / CreateVideoPage / HistoryPage / BillingPage / KeysPage / SettingsPage / DocsPage / InvitePage / AppLayout / LoginGate` 全量切换 `btn / btn-{variant} / field / input / card / page-* / badge / progress / tabs / kbd / empty-state`。
 - **页面重构**（管理端）：`Dashboard / TokenAccounts / CDK / Login / AdminLayout / _placeholder` 同步升级；`TokenAccountsPage` 表格切到 `data-table`，状态徽标切到 `badge badge-{success|warning|danger}`；`_placeholder` 改为带图标的 `empty-state`，所有占位页（用户管理 / 充值消费 / 优惠码 / 系统配置 / 请求日志）拥有一致空态外观。
 - **构建验证**：`pnpm typecheck` & `pnpm build` 全绿；docker `user-web` / `admin-web` 镜像在 `docker-compose.dev-full.yml` 上重新构建并热替换，仅 `28KB` (admin) / `38KB` (user) gzipped CSS。
@@ -242,9 +242,9 @@ net start winnat
 
 ## Sprint 9.5 · UX & 品牌微调（已完成）
 
-> 目标：把项目从「Klein Blue 主题站」收敛为「gpt2api · AIGC 平台」，主题降级为默认皮肤；首页开放浏览，生成动作未登录时弹浮层。
+> 目标：把项目从「image2api Blue 主题站」收敛为「image2api · AIGC 平台」，主题降级为默认皮肤；首页开放浏览，生成动作未登录时弹浮层。
 
-- **品牌降级**：用户可见文案统一改为 `gpt2api`，`Logo` 标识改为 `gpt2api`（`g2a` 角标）。代码 module path（`@kleinai/`*、Go module）保留不变，避免 churn。
+- **品牌降级**：用户可见文案统一改为 `image2api`，`Logo` 标识改为 `image2api`（`g2a` 角标）。代码 module path（`@image2api/`*、Go module）保留不变，避免 churn。
 - **首页开放**：`/`、`/create/image`、`/create/video`、`/docs` 不再要求登录，未登录用户可直接体验生成 UI；受保护路由（历史 / 余额 / KEY / 邀请 / 设置）外层挂 `<RequireAuth>`，未登录访问会回到首页并自动弹登录浮层。
 - **登录浮层**：新增 `<LoginGate />` 全局浮层 + `useLoginGateStore` 状态机 + `useEnsureLoggedIn(action)` Hook。生成按钮、受保护导航、401 拦截均通过浮层完成「断点续做」，无需中断当前页面状态。
 - **响应式**：
@@ -252,7 +252,7 @@ net start winnat
   - 创作页三栏改为 `lg`（≥1024px）双栏 + `2xl`（≥1536px）三栏；中等屏幕将「当前任务进度」合并到结果区头部。
   - 后台 `<AdminLayout>` 补齐移动端抽屉 + 顶栏汉堡按钮，header 加 `truncate` / `flex-shrink-0`，避免昵称撑爆。
 - **空白页修复**：`apps/admin` 的 `BrowserRouter basename="/admin"` 与 nginx 的根挂载路径冲突 → 改成无 basename；401 跳转改为 `/login`。
-- **PROGRESS / README 改写**：明确「克莱因蓝是默认皮肤而非项目身份」；默认账号 `admin / admin123`、用户端注册即用。
+- **PROGRESS / README 改写**：明确「image2api Blue是默认皮肤而非项目身份」；默认账号 `admin / admin123`、用户端注册即用。
 
 ---
 
@@ -269,13 +269,13 @@ net start winnat
 - `provider/grok`：通用「异步任务 + 轮询」协议
   - 同步直返 / 异步 `task_id` 自动适配
   - 内置 12 min 超时 + 3s→10s 指数 backoff
-- `provider/factory`：env 驱动 `KLEIN_PROVIDER_GPT/GROK = mock|real`，零代码切换
+- `provider/factory`：env 驱动 `IMAGE2API_PROVIDER_GPT/GROK = mock|real`，零代码切换
 - `.env.example` 增加 provider 模式与 base url 配置
 - `go build ./... && go vet ./...` 全绿
 
 ### 管理后台前端
 
-- `lib/api`（独立 token KEY = `klein:admin:token`）+ `lib/types` + `lib/format` + `lib/services`
+- `lib/api`（独立 token KEY = `image2api:admin:token`）+ `lib/types` + `lib/format` + `lib/services`
 - `stores/auth` + `stores/toast` + `components/Toaster`
 - `routes/RequireAuth` 路由守卫；401 自动清 token + 跳 `/admin/login`
 - 登录页：zod + react-hook-form + `/admin/api/v1/auth/login`
@@ -285,7 +285,7 @@ net start winnat
 - **Token 管理**：新增账号 Dialog（明文凭证，提交后端加密）
 - **Token 管理**：批量导入 Dialog（粘贴文本，每行一条，三种格式自动识别）
 - **CDK 批次**：批次号 / 名称 / 单码点数 / 数量 / per_user_limit / 过期 — 提交并展示结果
-- `pnpm --filter @kleinai/admin typecheck` + `build` 全绿
+- `pnpm --filter @image2api/admin typecheck` + `build` 全绿
 
 ### 仍开口
 
@@ -332,8 +332,8 @@ net start winnat
 ### 验收
 
 - `go vet ./... && go build ./...` 全绿
-- `pnpm --filter @kleinai/admin typecheck` 全绿
-- 容器 `klein-admin-dev` 重建后 GIN 启动日志已注册全部新路由
+- `pnpm --filter @image2api/admin typecheck` 全绿
+- 容器 `image2api-admin-dev` 重建后 GIN 启动日志已注册全部新路由
 - `curl /admin/api/v1/{accounts,proxies,system/settings}` 返回 401（已挂中间件）
 
 ### 9.5 修订（hotfix · 2026-04-27 晚）
@@ -413,16 +413,16 @@ net start winnat
 
 | 编号  | 决策                                                                        | 时间         | 备注                           |
 | --- | ------------------------------------------------------------------------- | ---------- | ---------------------------- |
-| 001 | 默认皮肤采用克莱因蓝 IKB `#002FA7` + 电光蓝 `#1E3DFF` 高光（仅视觉，可换）                       | 2026-04-27 | 替代之前的紫色方案；非项目身份              |
+| 001 | 默认皮肤采用image2api Blue IKB `#002FA7` + 电光蓝 `#1E3DFF` 高光（仅视觉，可换）                       | 2026-04-27 | 替代之前的紫色方案；非项目身份              |
 | 002 | 4 个二进制独立部署                                                                | 2026-04-27 | api/admin/openai/worker 解耦扩缩 |
 | 003 | 端口段 17000-17999；MySQL 13306 / Redis 16379                                 | 2026-04-27 | 避开常用端口                       |
 | 004 | 点数最小单位 0.01，DB int64 *100 存储                                              | 2026-04-27 | 避免浮点精度                       |
 | 005 | 用户 API Key 仅创建时返回明文                                                       | 2026-04-27 | DB 仅存 SHA256+salt+last4      |
 | 006 | provider 不持有 AES，credential 由 GenerationService 解密后注入 Request             | 2026-04-27 | 简化 provider 实现，集中密钥使用        |
-| 007 | provider 默认 `mock`，env `KLEIN_PROVIDER_GPT/GROK=real` 切真实通道               | 2026-04-27 | 本地 / CI 友好，生产显式启用            |
-| 008 | 后台 token 与用户 token 分别落 localStorage（`klein:token` vs `klein:admin:token`） | 2026-04-27 | 同源同浏览器隔离会话                   |
+| 007 | provider 默认 `mock`，env `IMAGE2API_PROVIDER_GPT/GROK=real` 切真实通道               | 2026-04-27 | 本地 / CI 友好，生产显式启用            |
+| 008 | 后台 token 与用户 token 分别落 localStorage（`image2api:token` vs `image2api:admin:token`） | 2026-04-27 | 同源同浏览器隔离会话                   |
 | 009 | 前端首页对未登录用户开放，生成等关键动作通过 `<LoginGate>` 浮层断点续做                               | 2026-04-27 | 避免「打开就是登录页」的硬墙体验             |
-| 010 | 用户可见品牌名 = `gpt2api`；代码 module/CSS 类（`@kleinai/`*、`klein-*`）保留为内部命名空间      | 2026-04-27 | 把克莱因蓝降级为默认皮肤而非身份             |
+| 010 | 用户可见品牌名 = `image2api`；代码 module/CSS 类（`@image2api/`*、`image2api-*`）保留为内部命名空间      | 2026-04-27 | 把image2api Blue降级为默认皮肤而非身份             |
 
 
 ---

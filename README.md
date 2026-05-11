@@ -1,34 +1,14 @@
-# gpt2api / KleinAI
+# image2api
 
-> 一个面向 GPT / GROK 账号池的 AIGC 聚合平台，提供图片、文字、视频的一站式生成能力。  
-> 前台面向创作，后台面向运营，开放 OpenAI 兼容接口，方便直接接入现有 SDK。
+image2api 是一个面向图片生成和 OpenAI 兼容接口的 AIGC 聚合平台。项目包含用户创作端, 管理后台, OpenAI 兼容 API, 后台任务 Worker, 账号池和计费运营能力。
 
-## 2.0 是什么
-
-`v2.0.0` 不是简单重排界面，而是一次完整的能力升级：
-
-- 统一文字、图片、视频三条生成链路
-- 统一账号池、代理、刷新、熔断、轮换、用量检测
-- 统一 OpenAI 兼容 API，前端和第三方 SDK 都能直接接
-- 统一后台运营能力：用户、账单、CDK、优惠码、模型价格、请求日志、上游日志
-- 统一部署方式：单机 Docker Compose 可跑，后续可平滑迁移到 K8s
-
-## 界面预览
-
-### 用户创作端
-
-![gpt2api 用户创作端](docs/ffaa6c7c-ee8b-4a1f-bdcc-df93c8d91abf.png)
-
-### 管理后台
-
-![gpt2api 管理后台](docs/7f76a99c-1100-4216-970b-624ff135808d.png)
+本仓库是独立维护的二开版本, 项目显示名统一为 `image2api`, Docker 镜像名统一以 `image2api` 开头。
 
 ## 核心能力
 
-- 账号池管理：GPT / GROK 账号批量导入、刷新、检测、熔断、轮换
-- 创作中心：文字对话、文生图、图生图、文生视频、图生视频
-- 异步任务：图片和视频支持任务查询、历史记录、预览、下载
-- OpenAI 兼容 API：
+- 图片生成: 支持文生图, 图生图, 异步任务, 历史记录, 预览和下载.
+- 原生高清: 支持上游原生 `gpt-image-2` Responses/Image generation 路线, 保留 1K/2K/4K 原生结果, 不做虚假放大.
+- OpenAI 兼容 API:
   - `GET /v1/models`
   - `POST /v1/chat/completions`
   - `POST /v1/images/generations`
@@ -36,129 +16,171 @@
   - `GET /v1/images/generations/:task_id`
   - `POST /v1/video/generations`
   - `GET /v1/video/generations/:task_id`
-- 管理后台：仪表盘、Token 管理、代理管理、用户管理、充值消费、优惠码、CDK、系统配置、模型价格、请求日志
-- 运营能力：充值套餐、扣费规则、模型映射、自动刷新、上游日志追踪
-- 部署能力：支持本地开发、单机部署、反向代理、SSL 证书自动更新
-
-## 2.0 设计目标
-
-1. 前台简洁统一，图片 / 文字 / 视频三个入口标准化
-2. 后台更适合运营，所有配置尽量表单化，不依赖 JSON 手填
-3. 账号与请求逻辑稳定，支持自动重试、换号、熔断、分批刷新
-4. 上游问题可追踪，失败时能看到完整 provider 日志
-5. 部署简单，能在一台 Linux 服务器上直接跑起来
+- 后台运营: 用户, 账单, CDK, 优惠码, 模型价格, Token/API Key 账号池, 代理, 请求日志, 上游日志.
+- 账号池: 支持 API key 类型账号和会话类账号, 支持检测, 熔断, 轮换和失败记录.
+- 部署: 支持本地开发, 单机 Docker Compose, Nginx/Caddy 反向代理.
 
 ## 技术栈
 
-- 后端：Go 1.24 + Gin + GORM + MySQL + Redis
-- 前端：React 18 + Vite + TypeScript + Tailwind
-- 部署：Docker / Docker Compose / Nginx / Caddy
-- 外部依赖：FlareSolverr、代理、对象存储（可选）
+- 后端: Go 1.24, Gin, GORM, MySQL, Redis.
+- 前端: React 18, Vite, TypeScript, Tailwind CSS.
+- 部署: Docker, Docker Compose, Nginx, Caddy.
 
 ## 仓库结构
 
 ```text
 .
-├── backend/     # Go 后端：API / Admin / OpenAI 兼容 / Worker
+├── backend/     # Go 后端: API / Admin / OpenAI 兼容 / Worker
 ├── frontend/    # 用户前台 + 管理后台
-├── deploy/      # Docker Compose、Nginx、Caddy、环境变量
-├── docs/        # 开发、API、部署、前端规范
-└── README.md
+├── deploy/      # Docker Compose, Nginx, Caddy, 环境变量模板
+├── docs/        # API, 部署, 上游账号, 图片生成说明
+├── scripts/     # 本地开发辅助脚本
+└── tools/       # 账号与数据转换工具
 ```
 
 ## 端口说明
 
 ### 对外端口
 
-- `17080`：用户前台
-- `17088`：管理后台
-- `17200`：OpenAI 兼容 API
+- `17080`: 用户前台.
+- `17088`: 管理后台.
+- `17200`: OpenAI 兼容 API.
 
-### 本机调试端口
+### 内部端口
 
-- `17180`：用户后端 API
-- `17188`：管理后台 API
-- `17200`：OpenAI 兼容 API
-- `23306`：MySQL
-- `16379`：Redis
-- `18191`：FlareSolverr
+- `17180`: 用户后端 API.
+- `17188`: 管理后台 API.
+- `17200`: OpenAI 兼容 API.
+- `23306` 或 `13306`: MySQL, 取决于 Compose 文件.
+- `16379`: Redis.
+- `18191`: FlareSolverr.
 
-## 快速部署
+## Docker 镜像命名
 
-下面是推荐的线上部署方式，和当前仓库的 `deploy/docker-compose.server.yml` 对齐。
+本仓库内 Compose 默认使用以下镜像名:
 
-### 1. 准备环境
-
-- 一台 Linux 服务器
-- Docker 和 Docker Compose
-- 1 个域名或 3 个子域名
-- 80 / 443 端口可用
-- MySQL / Redis 空间充足
-
-### 2. 拉取代码
-
-```bash
-git clone https://github.com/432539/gpt2api.git
-cd gpt2api
+```text
+image2api/backend:dev
+image2api/backend:latest
+image2api/user-web:dev
+image2api/user-web:latest
+image2api/admin-web:dev
+image2api/admin-web:latest
 ```
 
-### 3. 配置环境
+如发布到 GitHub Container Registry, 推荐使用:
 
-复制环境变量模板并修改：
-
-```bash
-cp deploy/env/.env.example deploy/env/.env.prod
+```text
+ghcr.io/zuiyinggg/image2api-backend
+ghcr.io/zuiyinggg/image2api-user-web
+ghcr.io/zuiyinggg/image2api-admin-web
 ```
 
-重点检查这些项：
+## 快速启动
 
-- 数据库连接
-- Redis 地址
-- JWT 密钥
-- AES 密钥
-- 域名 / CORS
-- OpenAI / GROK 基础地址
-- 代理与 FlareSolverr 地址
-
-### 4. 启动服务
+### 1. 拉取代码
 
 ```bash
-cd deploy
-docker compose -f docker-compose.server.yml up -d --build
+git clone https://github.com/zuiyinggg/image2api.git
+cd image2api
 ```
 
-### 5. 检查状态
+### 2. 准备环境变量
 
 ```bash
-docker compose -f docker-compose.server.yml ps
-docker logs -f klein-api-dev
-docker logs -f klein-admin-dev
-docker logs -f klein-openai-dev
-docker logs -f klein-worker-dev
+cp deploy/env/.env.example deploy/env/.env.local
 ```
 
-### 6. 访问地址
+必须修改以下生产密钥:
 
-- 用户前台：`http(s)://你的域名:17080`
-- 管理后台：`http(s)://你的域名:17088`
-- OpenAI 兼容 API：`http(s)://你的域名:17200/v1`
+- `IMAGE2API_MYSQL_ROOT_PASSWORD`
+- `IMAGE2API_MYSQL_PASSWORD`
+- `IMAGE2API_DB_DSN`
+- `IMAGE2API_JWT_SECRET`
+- `IMAGE2API_JWT_REFRESH_SECRET`
+- `IMAGE2API_AES_KEY`
+- `IMAGE2API_CORS_ORIGINS`
 
-## 生产建议
+密钥生成示例:
 
-- 前台、后台、API 分域名部署更清晰
-- 管理后台建议限制来源 IP
-- OpenAI 兼容接口建议走独立域名
-- 80 / 443 端口建议由 Caddy 或 Nginx 统一接管 SSL
-- 图片和视频素材建议落 OSS 或本地缓存，避免直接暴露上游地址
+```bash
+openssl rand -hex 32
+```
 
-## 开发方式
+### 3. 本地完整容器栈
 
 ```bash
 cd deploy
 docker compose -f docker-compose.dev-full.yml up -d --build
 ```
 
-本地开发时，前后端都可以单独启动，也可以只拉起 MySQL / Redis。
+检查状态:
+
+```bash
+docker compose -f docker-compose.dev-full.yml ps
+docker logs -f image2api-api-dev
+docker logs -f image2api-admin-dev
+docker logs -f image2api-openai-dev
+docker logs -f image2api-worker-dev
+```
+
+### 4. 生产 Compose
+
+```bash
+cd deploy
+docker compose --env-file ./env/.env.local -f docker-compose.yml up -d --build
+```
+
+访问入口:
+
+- 用户前台: `http://你的域名:17080`
+- 管理后台: `http://你的域名:17088/admin/`
+- OpenAI 兼容 API: `http://你的域名:17200/v1`
+
+## 本地开发
+
+只启动 MySQL 和 Redis:
+
+```bash
+cd deploy
+docker compose -f docker-compose.dev.yml up -d
+```
+
+后端:
+
+```bash
+cd backend
+go test ./...
+go run ./cmd/api
+```
+
+前端:
+
+```bash
+cd frontend
+corepack enable
+pnpm install
+pnpm --filter @image2api/user dev
+pnpm --filter @image2api/admin dev
+```
+
+## 上游账号和 gpt-image-2
+
+- 后台添加 API key 类型上游账号时, `base_url` 应指向支持 Responses/Image generation 的上游.
+- 需要原生 2K/4K 时, 上游必须真实支持 `gpt-image-2` 对应分辨率.
+- 不支持原生高清的账号不会被当作高清账号使用.
+- 上游失败原因可在后台生成日志和上游日志中查看.
+
+更多说明见:
+
+- [上游账号配置](docs/UPSTREAM_ACCOUNTS.md)
+- [图片生成说明](docs/IMAGE_GENERATION.md)
+
+## 安全边界
+
+- 不要提交 `.env.local`, 数据库 dump, Redis dump, 上传文件, 生成图片缓存, 用户数据和真实上游 token.
+- 公开仓库前必须运行敏感信息扫描.
+- 本仓库当前默认许可证为保留权利, 公开开源前需要重新确认 LICENSE.
 
 ## 文档
 
@@ -168,17 +190,9 @@ docker compose -f docker-compose.dev-full.yml up -d --build
 - [API 规范](docs/04-API规范.md)
 - [前端规范](docs/05-前端规范.md)
 - [部署与运维规范](docs/06-部署与运维规范.md)
+- [安全说明](SECURITY.md)
+- [变更记录](CHANGELOG.md)
 
-## 开源地址
+## License
 
-- [https://github.com/432539/gpt2api](https://github.com/432539/gpt2api)
-
-## 版本与历史
-
-- 当前默认版本：`v2.0.0`
-- `v1.0.x` 保留为历史稳定版本，可通过 Git tag / 分支继续查看
-- 后续发布建议采用 `v2.0.x` 继续演进，避免覆盖旧版说明
-
-## Stars
-
-[![GitHub stars](https://img.shields.io/github/stars/432539/gpt2api?style=flat-square)](https://github.com/432539/gpt2api)
+当前为保留权利版本, 见 [LICENSE](LICENSE). 如后续需要公开开源, 请先确认上游授权和所有第三方素材/代码许可证。

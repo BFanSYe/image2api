@@ -6,21 +6,21 @@ import (
 )
 
 func TestLoadInternalAppliesExplicitEnvOverrides(t *testing.T) {
-	t.Setenv("KLEIN_ENV", "dev")
-	t.Setenv("KLEIN_API_PORT", "18180")
-	t.Setenv("KLEIN_ADMIN_PORT", "18188")
-	t.Setenv("KLEIN_OPENAI_PORT", "18200")
-	t.Setenv("KLEIN_WS_PORT", "18280")
-	t.Setenv("KLEIN_PPROF_PORT", "18590")
-	t.Setenv("KLEIN_REDIS_DB", "7")
-	t.Setenv("KLEIN_REDIS_POOL_SIZE", "12")
-	t.Setenv("KLEIN_JWT_ACCESS_TTL", "45m")
-	t.Setenv("KLEIN_JWT_REFRESH_TTL", "720h")
-	t.Setenv("KLEIN_NODE_ID", "4")
-	t.Setenv("KLEIN_LOG_MAX_SIZE_MB", "64")
-	t.Setenv("KLEIN_LOG_MAX_AGE_DAYS", "9")
-	t.Setenv("KLEIN_LOG_COMPRESS", "false")
-	t.Setenv("KLEIN_CORS_ORIGINS", "http://a.test, http://b.test")
+	t.Setenv("IMAGE2API_ENV", "dev")
+	t.Setenv("IMAGE2API_API_PORT", "18180")
+	t.Setenv("IMAGE2API_ADMIN_PORT", "18188")
+	t.Setenv("IMAGE2API_OPENAI_PORT", "18200")
+	t.Setenv("IMAGE2API_WS_PORT", "18280")
+	t.Setenv("IMAGE2API_PPROF_PORT", "18590")
+	t.Setenv("IMAGE2API_REDIS_DB", "7")
+	t.Setenv("IMAGE2API_REDIS_POOL_SIZE", "12")
+	t.Setenv("IMAGE2API_JWT_ACCESS_TTL", "45m")
+	t.Setenv("IMAGE2API_JWT_REFRESH_TTL", "720h")
+	t.Setenv("IMAGE2API_NODE_ID", "4")
+	t.Setenv("IMAGE2API_LOG_MAX_SIZE_MB", "64")
+	t.Setenv("IMAGE2API_LOG_MAX_AGE_DAYS", "9")
+	t.Setenv("IMAGE2API_LOG_COMPRESS", "false")
+	t.Setenv("IMAGE2API_CORS_ORIGINS", "http://a.test, http://b.test")
 
 	cfg, err := loadInternal()
 	if err != nil {
@@ -48,8 +48,8 @@ func TestLoadInternalAppliesExplicitEnvOverrides(t *testing.T) {
 }
 
 func TestLoadInternalRejectsInvalidEnvOverride(t *testing.T) {
-	t.Setenv("KLEIN_ENV", "dev")
-	t.Setenv("KLEIN_API_PORT", "not-a-port")
+	t.Setenv("IMAGE2API_ENV", "dev")
+	t.Setenv("IMAGE2API_API_PORT", "not-a-port")
 
 	if _, err := loadInternal(); err == nil {
 		t.Fatal("loadInternal() error = nil, want invalid port error")

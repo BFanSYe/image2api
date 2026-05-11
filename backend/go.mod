@@ -1,4 +1,4 @@
-module github.com/kleinai/backend
+module github.com/zuiyinggg/image2api/backend
 
 go 1.24
 

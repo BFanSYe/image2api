@@ -1,4 +1,4 @@
-gpt2api.com, www.gpt2api.com {
+image2api.example, www.image2api.example {
 	encode gzip zstd
 
 	header {
@@ -20,7 +20,7 @@ gpt2api.com, www.gpt2api.com {
 	}
 }
 
-admin.gpt2api.com {
+admin.image2api.example {
 	encode gzip zstd
 
 	header {

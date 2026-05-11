@@ -8,8 +8,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"github.com/kleinai/backend/pkg/config"
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/zuiyinggg/image2api/backend/pkg/config"
+	"github.com/zuiyinggg/image2api/backend/pkg/logger"
 )
 
 // NewRedis 创建 go-redis 客户端并 ping 一次。

@@ -26,8 +26,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/kleinai/backend/internal/provider"
-	"github.com/kleinai/backend/pkg/outbound"
+	"github.com/zuiyinggg/image2api/backend/internal/provider"
+	"github.com/zuiyinggg/image2api/backend/pkg/outbound"
 )
 
 var grokCFCache = struct {
@@ -689,7 +689,7 @@ func (c *WebClient) uploadCachedLocalImageMeta(ctx context.Context, token, cache
 	if rel == "" || strings.Contains(rel, "..") || strings.HasPrefix(rel, "/") || strings.HasPrefix(rel, `\`) {
 		return "", "", fmt.Errorf("invalid cached reference path")
 	}
-	root := strings.TrimSpace(os.Getenv("KLEIN_STORAGE_ROOT"))
+	root := strings.TrimSpace(os.Getenv("IMAGE2API_STORAGE_ROOT"))
 	if root == "" {
 		root = "/app/storage/public"
 	}
@@ -936,8 +936,8 @@ func normalizeGrokToken(cred string) string {
 func buildGrokCookie(cred string) string {
 	cred = strings.TrimSpace(cred)
 	state := readGrokRuntimeCFState()
-	cf := strings.TrimSpace(firstNonEmpty(state.CFClearance, os.Getenv("KLEIN_GROK_CF_CLEARANCE")))
-	extraCookies := normalizeCookieEnv(firstNonEmpty(state.Cookies, os.Getenv("KLEIN_GROK_CF_COOKIES")))
+	cf := strings.TrimSpace(firstNonEmpty(state.CFClearance, os.Getenv("IMAGE2API_GROK_CF_CLEARANCE")))
+	extraCookies := normalizeCookieEnv(firstNonEmpty(state.Cookies, os.Getenv("IMAGE2API_GROK_CF_COOKIES")))
 	if strings.Contains(cred, "=") {
 		if !strings.Contains(cred, "sso-rw=") {
 			token := normalizeGrokToken(cred)
@@ -965,7 +965,7 @@ func readGrokRuntimeCFState() grokRuntimeCFState {
 	}
 	grokCFCache.loaded = time.Now()
 	grokCFCache.state = grokRuntimeCFState{}
-	path := strings.TrimSpace(os.Getenv("KLEIN_GROK_CF_STATE_PATH"))
+	path := strings.TrimSpace(os.Getenv("IMAGE2API_GROK_CF_STATE_PATH"))
 	if path == "" {
 		path = "/app/storage/grok_cf.json"
 	}
@@ -979,7 +979,7 @@ func readGrokRuntimeCFState() grokRuntimeCFState {
 
 func grokUserAgent() string {
 	state := readGrokRuntimeCFState()
-	if ua := strings.TrimSpace(firstNonEmpty(state.UserAgent, os.Getenv("KLEIN_GROK_USER_AGENT"))); ua != "" {
+	if ua := strings.TrimSpace(firstNonEmpty(state.UserAgent, os.Getenv("IMAGE2API_GROK_USER_AGENT"))); ua != "" {
 		return ua
 	}
 	return grokUA
@@ -1008,7 +1008,7 @@ func grokSecPlatform(ua string) string {
 }
 
 func grokStatsigID() string {
-	if !envBool("KLEIN_GROK_DYNAMIC_STATSIG", true) {
+	if !envBool("IMAGE2API_GROK_DYNAMIC_STATSIG", true) {
 		return "ZTpUeXBlRXJyb3I6IENhbm5vdCByZWFkIHByb3BlcnRpZXMgb2YgdW5kZWZpbmVkIChyZWFkaW5nICdjaGlsZE5vZGVzJyk="
 	}
 	messages := []string{
@@ -1042,7 +1042,7 @@ func envBool(key string, fallback bool) bool {
 }
 
 func shouldNormalizeGrokUpload() bool {
-	return envBool("KLEIN_GROK_UPLOAD_NORMALIZE_JPEG", true)
+	return envBool("IMAGE2API_GROK_UPLOAD_NORMALIZE_JPEG", true)
 }
 
 func normalizeImageForGrokUpload(data []byte) ([]byte, bool) {

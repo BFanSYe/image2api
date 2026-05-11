@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
+	"github.com/zuiyinggg/image2api/backend/pkg/logger"
 )
 
 // Body 统一响应结构。
@@ -18,7 +18,7 @@ type Body struct {
 	Msg     string `json:"msg"`
 	Data    any    `json:"data,omitempty"`
 	TraceID string `json:"trace_id,omitempty"`
-	// Detail 底层错误；仅 dev/local 或 KLEIN_API_ERROR_DETAIL=1 时填充。
+	// Detail 底层错误；仅 dev/local 或 IMAGE2API_API_ERROR_DETAIL=1 时填充。
 	Detail string `json:"detail,omitempty"`
 }
 
@@ -78,8 +78,8 @@ func Fail(c *gin.Context, err error) {
 		TraceID: c.GetHeader(traceHeader),
 	}
 	if u := be.Unwrap(); u != nil {
-		env := os.Getenv("KLEIN_ENV")
-		if env == "dev" || env == "local" || os.Getenv("KLEIN_API_ERROR_DETAIL") == "1" {
+		env := os.Getenv("IMAGE2API_ENV")
+		if env == "dev" || env == "local" || os.Getenv("IMAGE2API_API_ERROR_DETAIL") == "1" {
 			body.Detail = u.Error()
 		}
 	}

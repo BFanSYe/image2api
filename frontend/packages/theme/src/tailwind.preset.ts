@@ -1,9 +1,9 @@
 /**
- * gpt2api · Tailwind v3 preset
+ * image2api · Tailwind v3 preset
  *
  * 使用方式（apps/* tailwind.config.ts）：
- *   import kleinPreset from '@kleinai/theme/preset';
- *   export default { presets: [kleinPreset], content: [...] };
+ *   import image2apiPreset from '@image2api/theme/preset';
+ *   export default { presets: [image2apiPreset], content: [...] };
  */
 import type { Config } from 'tailwindcss';
 

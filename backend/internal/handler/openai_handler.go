@@ -10,12 +10,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/internal/middleware"
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/provider"
-	grokweb "github.com/kleinai/backend/internal/provider/grok"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/internal/service"
+	"github.com/zuiyinggg/image2api/backend/internal/middleware"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/provider"
+	grokweb "github.com/zuiyinggg/image2api/backend/internal/provider/grok"
+	"github.com/zuiyinggg/image2api/backend/internal/repo"
+	"github.com/zuiyinggg/image2api/backend/internal/service"
 )
 
 // OpenAIHandler serves /v1 compatible downstream APIs.
@@ -42,11 +42,11 @@ type modelItem struct {
 // Models GET /v1/models.
 func (h *OpenAIHandler) Models(c *gin.Context) {
 	data := []modelItem{
-		{ID: "gpt-4o-mini", Object: "model", OwnedBy: "kleinai", Kind: "text", Endpoint: "/v1/chat/completions"},
+		{ID: "gpt-4o-mini", Object: "model", OwnedBy: "image2api", Kind: "text", Endpoint: "/v1/chat/completions"},
 		{ID: "gpt-image-2", Object: "model", OwnedBy: "openai", Kind: "image", Endpoint: "/v1/images/generations", Meta: gin.H{"edits": true, "mode": "responses_image_generation", "resolutions": []string{"1K", "2K", "4K"}}},
 		{ID: "grok-imagine-video", Object: "model", OwnedBy: "grok", Kind: "video", Endpoint: "/v1/video/generations", Meta: gin.H{"modes": []string{"text_to_video", "image_to_video", "multi_image_to_video"}}},
-		{ID: "vid-v1", Object: "model", OwnedBy: "kleinai", Kind: "video", Endpoint: "/v1/video/generations", Meta: gin.H{"alias_of": "grok-imagine-video"}},
-		{ID: "vid-i2v", Object: "model", OwnedBy: "kleinai", Kind: "video", Endpoint: "/v1/video/generations", Meta: gin.H{"alias_of": "grok-imagine-video"}},
+		{ID: "vid-v1", Object: "model", OwnedBy: "image2api", Kind: "video", Endpoint: "/v1/video/generations", Meta: gin.H{"alias_of": "grok-imagine-video"}},
+		{ID: "vid-i2v", Object: "model", OwnedBy: "image2api", Kind: "video", Endpoint: "/v1/video/generations", Meta: gin.H{"alias_of": "grok-imagine-video"}},
 	}
 	for _, id := range grokweb.ChatModelIDs() {
 		data = append(data, modelItem{ID: id, Object: "model", OwnedBy: "grok", Kind: "text", Endpoint: "/v1/chat/completions"})

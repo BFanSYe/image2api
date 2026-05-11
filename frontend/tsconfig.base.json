@@ -19,16 +19,16 @@
     "useDefineForClassFields": true,
     "baseUrl": ".",
     "paths": {
-      "@kleinai/theme": ["packages/theme/src"],
-      "@kleinai/theme/*": ["packages/theme/src/*"],
-      "@kleinai/ui": ["packages/ui/src"],
-      "@kleinai/ui/*": ["packages/ui/src/*"],
-      "@kleinai/api-client": ["packages/api-client/src"],
-      "@kleinai/api-client/*": ["packages/api-client/src/*"],
-      "@kleinai/hooks": ["packages/hooks/src"],
-      "@kleinai/hooks/*": ["packages/hooks/src/*"],
-      "@kleinai/utils": ["packages/utils/src"],
-      "@kleinai/utils/*": ["packages/utils/src/*"]
+      "@image2api/theme": ["packages/theme/src"],
+      "@image2api/theme/*": ["packages/theme/src/*"],
+      "@image2api/ui": ["packages/ui/src"],
+      "@image2api/ui/*": ["packages/ui/src/*"],
+      "@image2api/api-client": ["packages/api-client/src"],
+      "@image2api/api-client/*": ["packages/api-client/src/*"],
+      "@image2api/hooks": ["packages/hooks/src"],
+      "@image2api/hooks/*": ["packages/hooks/src/*"],
+      "@image2api/utils": ["packages/utils/src"],
+      "@image2api/utils/*": ["packages/utils/src/*"]
     }
   }
 }

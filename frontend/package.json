@@ -1,12 +1,12 @@
 {
-  "name": "kleinai-frontend",
+  "name": "image2api-frontend",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@9.7.0",
   "scripts": {
-    "dev:user": "pnpm --filter @kleinai/user dev",
-    "dev:admin": "pnpm --filter @kleinai/admin dev",
-    "build": "pnpm -r --filter ./apps/* build",
+    "dev:user": "pnpm --filter @image2api/user dev",
+    "dev:admin": "pnpm --filter @image2api/admin dev",
+    "build": "pnpm -r --filter \"./apps/*\" build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,css,md,json}\""

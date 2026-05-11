@@ -2,10 +2,10 @@
 //
 // 流程（与 docs/02-后端规范.md §6 对齐）：
 //
-//   1. PreDeduct  → wallet.Freeze + 写 consume_record(status=0)
-//   2. (上游调用)
-//   3. Settle     → wallet.Settle  + 更新 consume_record(status=1)
-//   4. Failure    → wallet.Refund  + 更新 consume_record(status=2) + 写 refund_record
+//  1. PreDeduct  → wallet.Freeze + 写 consume_record(status=0)
+//  2. (上游调用)
+//  3. Settle     → wallet.Settle  + 更新 consume_record(status=1)
+//  4. Failure    → wallet.Refund  + 更新 consume_record(status=2) + 写 refund_record
 //
 // 任务 ID（task_id）在调用方生成，应使用 ULID 字符串。
 package service
@@ -17,10 +17,10 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/repo"
+	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
+	"github.com/zuiyinggg/image2api/backend/pkg/logger"
 )
 
 // BillingService 计费引擎。

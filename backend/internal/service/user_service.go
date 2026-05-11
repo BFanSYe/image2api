@@ -4,9 +4,9 @@ package service
 import (
 	"context"
 
-	"github.com/kleinai/backend/internal/dto"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/errcode"
+	"github.com/zuiyinggg/image2api/backend/internal/dto"
+	"github.com/zuiyinggg/image2api/backend/internal/repo"
+	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
 )
 
 // UserService 用户读取层。

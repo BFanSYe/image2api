@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kleinai/backend/internal/provider"
+	"github.com/zuiyinggg/image2api/backend/internal/provider"
 )
 
 func TestExtractWebImageToolIDs(t *testing.T) {

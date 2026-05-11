@@ -14,13 +14,13 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/dto"
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/crypto"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/jwtpayload"
-	"github.com/kleinai/backend/pkg/outbound"
+	"github.com/zuiyinggg/image2api/backend/internal/dto"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/repo"
+	"github.com/zuiyinggg/image2api/backend/pkg/crypto"
+	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
+	"github.com/zuiyinggg/image2api/backend/pkg/jwtpayload"
+	"github.com/zuiyinggg/image2api/backend/pkg/outbound"
 )
 
 type flexStringList []string

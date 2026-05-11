@@ -16,16 +16,16 @@ const (
 
 // WalletLog 点数流水（总账）。
 type WalletLog struct {
-	ID            uint64    `gorm:"primaryKey;column:id" json:"id"`
-	UserID        uint64    `gorm:"column:user_id;not null;index:idx_user_created,priority:1" json:"user_id"`
-	Direction     int8      `gorm:"column:direction;not null" json:"direction"` // 1 收入 -1 支出
-	BizType       string    `gorm:"column:biz_type;size:32;not null;index:idx_biz,priority:1" json:"biz_type"`
-	BizID         string    `gorm:"column:biz_id;size:64;not null;index:idx_biz,priority:2" json:"biz_id"`
-	Points        int64     `gorm:"column:points;not null" json:"points"`
-	PointsBefore  int64     `gorm:"column:points_before;not null" json:"points_before"`
-	PointsAfter   int64     `gorm:"column:points_after;not null" json:"points_after"`
-	Remark        *string   `gorm:"column:remark;size:255" json:"remark,omitempty"`
-	CreatedAt     time.Time `gorm:"column:created_at;autoCreateTime;index:idx_user_created,priority:2" json:"created_at"`
+	ID           uint64    `gorm:"primaryKey;column:id" json:"id"`
+	UserID       uint64    `gorm:"column:user_id;not null;index:idx_user_created,priority:1" json:"user_id"`
+	Direction    int8      `gorm:"column:direction;not null" json:"direction"` // 1 收入 -1 支出
+	BizType      string    `gorm:"column:biz_type;size:32;not null;index:idx_biz,priority:1" json:"biz_type"`
+	BizID        string    `gorm:"column:biz_id;size:64;not null;index:idx_biz,priority:2" json:"biz_id"`
+	Points       int64     `gorm:"column:points;not null" json:"points"`
+	PointsBefore int64     `gorm:"column:points_before;not null" json:"points_before"`
+	PointsAfter  int64     `gorm:"column:points_after;not null" json:"points_after"`
+	Remark       *string   `gorm:"column:remark;size:255" json:"remark,omitempty"`
+	CreatedAt    time.Time `gorm:"column:created_at;autoCreateTime;index:idx_user_created,priority:2" json:"created_at"`
 }
 
 // TableName 表名。

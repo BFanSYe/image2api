@@ -16,14 +16,14 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/pkg/config"
-	"github.com/kleinai/backend/pkg/crypto"
-	"github.com/kleinai/backend/pkg/database"
-	"github.com/kleinai/backend/pkg/jwtx"
-	"github.com/kleinai/backend/pkg/logger"
-	"github.com/kleinai/backend/pkg/ratelimit"
-	"github.com/kleinai/backend/pkg/snowflake"
-	"github.com/kleinai/backend/pkg/version"
+	"github.com/zuiyinggg/image2api/backend/pkg/config"
+	"github.com/zuiyinggg/image2api/backend/pkg/crypto"
+	"github.com/zuiyinggg/image2api/backend/pkg/database"
+	"github.com/zuiyinggg/image2api/backend/pkg/jwtx"
+	"github.com/zuiyinggg/image2api/backend/pkg/logger"
+	"github.com/zuiyinggg/image2api/backend/pkg/ratelimit"
+	"github.com/zuiyinggg/image2api/backend/pkg/snowflake"
+	"github.com/zuiyinggg/image2api/backend/pkg/version"
 )
 
 // Deps 启动后向业务层注入的依赖集合。
@@ -46,7 +46,7 @@ func Init(serviceName string) (*Deps, error) {
 	if err := logger.Init(cfg); err != nil {
 		return nil, fmt.Errorf("init logger: %w", err)
 	}
-	logger.L().Info("kleinai starting",
+	logger.L().Info("image2api starting",
 		zap.String("service", serviceName),
 		zap.String("env", cfg.App.Env),
 		zap.String("version", version.Info()),
@@ -121,7 +121,7 @@ func decodeAESKey(raw string) ([]byte, error) {
 	if len(raw) == 32 {
 		return []byte(raw), nil
 	}
-	return nil, errors.New("KLEIN_AES_KEY must be 32 bytes raw or 64 hex chars")
+	return nil, errors.New("IMAGE2API_AES_KEY must be 32 bytes raw or 64 hex chars")
 }
 
 // Run 优雅启停 HTTP 服务。

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import clsx from 'clsx';
 
-import { applyThemeMode, type ThemeMode } from '@kleinai/theme';
+import { applyThemeMode, type ThemeMode } from '@image2api/theme';
 
 import { ApiError } from '../../lib/api';
 import { fmtPoints, fmtTime } from '../../lib/format';
@@ -33,12 +33,12 @@ type PwdForm = z.infer<typeof pwdSchema>;
 export default function SettingsPage() {
   const me = useAuthStore((s) => s.me);
   const [mode, setLocalMode] = useState<ThemeMode>(
-    (localStorage.getItem('klein:theme') as ThemeMode | null) ?? 'light',
+    (localStorage.getItem('image2api:theme') as ThemeMode | null) ?? 'light',
   );
 
   const setTheme = (m: ThemeMode) => {
     applyThemeMode(m);
-    localStorage.setItem('klein:theme', m);
+    localStorage.setItem('image2api:theme', m);
     setLocalMode(m);
   };
 

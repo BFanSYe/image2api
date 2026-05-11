@@ -7,7 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      '@kleinai/theme': path.resolve(__dirname, '../../packages/theme/src'),
+      '@image2api/theme': path.resolve(__dirname, '../../packages/theme/src'),
     },
   },
   server: {

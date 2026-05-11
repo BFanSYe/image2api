@@ -1,8 +1,8 @@
-# KleinAI 默认配置（不含敏感信息）
-# 优先级：环境变量 > config.${KLEIN_ENV}.yaml > 本文件
+# image2api 默认配置（不含敏感信息）
+# 优先级：环境变量 > config.${IMAGE2API_ENV}.yaml > 本文件
 
 app:
-  name: kleinai
+  name: image2api
   env: dev
 
 server:
@@ -16,14 +16,14 @@ server:
   shutdown_timeout: 15s
 
 mysql:
-  dsn: ""                    # 由环境变量 KLEIN_DB_DSN 注入
+  dsn: ""                    # 由环境变量 IMAGE2API_DB_DSN 注入
   max_open_conns: 100
   max_idle_conns: 20
   conn_max_lifetime: 1h
   slow_threshold: 200ms
 
 redis:
-  addr: ""                   # 由环境变量 KLEIN_REDIS_ADDR 注入
+  addr: ""                   # 由环境变量 IMAGE2API_REDIS_ADDR 注入
   password: ""
   db: 0
   pool_size: 50
@@ -69,4 +69,4 @@ billing:
   point_unit: 100            # 1 点 = 100（最小单位 0.01）
 
 cdn:
-  base: https://cdn.klein.example
+  base: https://cdn.image2api.example

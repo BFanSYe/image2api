@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Stop KleinAI local dev dependency containers (MySQL / Redis).
+  Stop image2api local dev dependency containers (MySQL / Redis).
 
 .DESCRIPTION
   - Default: docker compose down, keeps volumes

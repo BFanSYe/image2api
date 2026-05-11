@@ -1,11 +1,11 @@
 /* ===========================================================
-   gpt2api Design Tokens · 默认皮肤：Klein Blue (IKB)
+   image2api Design Tokens · 默认皮肤：image2api Blue
    规则：禁止硬编码颜色 / 间距 / 圆角，必须走 CSS 变量。
    组件层在 components.css 实现；preset 把以下变量暴露给 Tailwind。
    =========================================================== */
 
 :root {
-  /* ====== 主色：克莱因蓝（IKB） ====== */
+  /* ====== 主色：image2api Blue（IKB） ====== */
   --klein-50:  #E5ECFF;
   --klein-100: #C6D2FF;
   --klein-200: #93A6FF;

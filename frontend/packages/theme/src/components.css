@@ -1,7 +1,7 @@
 /* ===========================================================
-   gpt2api · UI Pro 组件层
+   image2api · UI Pro 组件层
    仅依赖 tokens.css 与 Tailwind 工具类。命名以 BEM-lite 为基础。
-   入口在每个 app 的 main.tsx 中显式引用 @kleinai/theme/components.css
+   入口在每个 app 的 main.tsx 中显式引用 @image2api/theme/components.css
    =========================================================== */
 
 /* -------------------------------------------------------------
@@ -83,7 +83,7 @@
   .btn-icon.btn-lg { width: var(--ctl-h-lg); }
   .btn-icon.btn-xl { width: var(--ctl-h-xl); }
 
-  /* 语义 · primary（克莱因蓝渐变） */
+  /* 语义 · primary（image2api Blue渐变） */
   .btn-primary {
     background-image: var(--klein-gradient);
     color: var(--text-on-klein);
@@ -95,7 +95,7 @@
     filter: brightness(1.05);
   }
 
-  /* 语义 · secondary（克莱因蓝弱底，常用于次级 CTA） */
+  /* 语义 · secondary（image2api Blue弱底，常用于次级 CTA） */
   .btn-secondary {
     background: var(--info-soft);
     color: var(--klein-500);

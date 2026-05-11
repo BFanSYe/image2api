@@ -33,21 +33,21 @@ type ProxyListReq struct {
 
 // ProxyResp 出参（密码不返回）。
 type ProxyResp struct {
-	ID           uint64 `json:"id"`
-	Name         string `json:"name"`
-	Protocol     string `json:"protocol"`
-	Host         string `json:"host"`
-	Port         uint16 `json:"port"`
-	Username     string `json:"username,omitempty"`
-	HasPassword  bool   `json:"has_password"`
-	Status       int8   `json:"status"`
-	LastCheckAt  int64  `json:"last_check_at,omitempty"`
-	LastCheckOK  int8   `json:"last_check_ok"`
-	LastCheckMs  int    `json:"last_check_ms"`
-	LastError    string `json:"last_error,omitempty"`
-	Remark       string `json:"remark,omitempty"`
-	CreatedAt    int64  `json:"created_at"`
-	UpdatedAt    int64  `json:"updated_at"`
+	ID          uint64 `json:"id"`
+	Name        string `json:"name"`
+	Protocol    string `json:"protocol"`
+	Host        string `json:"host"`
+	Port        uint16 `json:"port"`
+	Username    string `json:"username,omitempty"`
+	HasPassword bool   `json:"has_password"`
+	Status      int8   `json:"status"`
+	LastCheckAt int64  `json:"last_check_at,omitempty"`
+	LastCheckOK int8   `json:"last_check_ok"`
+	LastCheckMs int    `json:"last_check_ms"`
+	LastError   string `json:"last_error,omitempty"`
+	Remark      string `json:"remark,omitempty"`
+	CreatedAt   int64  `json:"created_at"`
+	UpdatedAt   int64  `json:"updated_at"`
 }
 
 // ProxyTestResp 代理测试响应。

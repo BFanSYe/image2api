@@ -9,7 +9,7 @@ export default function InvitePage() {
   const link =
     typeof window !== 'undefined'
       ? `${window.location.origin}/register?invite=${code}`
-      : `https://gpt2api.example/register?invite=${code}`;
+      : `https://image2api.example/register?invite=${code}`;
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text).then(() => toast.success(`${label}已复制`));

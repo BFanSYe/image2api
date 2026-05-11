@@ -47,7 +47,7 @@ func New(secret, refreshSecret string, accessTTL, refreshTTL time.Duration) (*Ma
 		refreshSecret: []byte(refreshSecret),
 		accessTTL:     accessTTL,
 		refreshTTL:    refreshTTL,
-		issuer:        "kleinai",
+		issuer:        "image2api",
 	}, nil
 }
 

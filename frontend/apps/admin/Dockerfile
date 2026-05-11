@@ -11,7 +11,7 @@ COPY packages packages
 COPY apps/admin apps/admin
 
 RUN pnpm install --frozen-lockfile=false
-RUN pnpm --filter @kleinai/admin build
+RUN pnpm --filter @image2api/admin build
 
 FROM nginx:1.27-alpine AS runtime
 COPY --from=build /repo/apps/admin/dist /usr/share/nginx/html/admin

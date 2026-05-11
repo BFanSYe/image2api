@@ -76,7 +76,7 @@ export default function BillingPage() {
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               className="input"
-              placeholder="例如：GPT2API-2026-WELCOME"
+              placeholder="例如：IMAGE2API-2026-WELCOME"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               maxLength={32}

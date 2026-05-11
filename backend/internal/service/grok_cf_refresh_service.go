@@ -14,9 +14,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/repo"
+	"github.com/zuiyinggg/image2api/backend/pkg/logger"
 )
 
 const defaultGrokCFStatePath = "/app/storage/grok_cf.json"
@@ -224,7 +224,7 @@ func (s *GrokCFRefreshService) recordError(ctx context.Context, msg string) {
 }
 
 func grokCFStatePath() string {
-	if v := strings.TrimSpace(os.Getenv("KLEIN_GROK_CF_STATE_PATH")); v != "" {
+	if v := strings.TrimSpace(os.Getenv("IMAGE2API_GROK_CF_STATE_PATH")); v != "" {
 		return v
 	}
 	return defaultGrokCFStatePath

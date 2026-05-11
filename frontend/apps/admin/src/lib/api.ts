@@ -1,6 +1,6 @@
 // 后台管理 axios 客户端。与用户端独立：
 //   - baseURL: /admin/api/v1
-//   - token 存 localStorage(key: klein:admin:token)
+//   - token 存 localStorage(key: image2api:admin:token)
 //   - 401 → 清 token，跳转 /login
 import axios, {
   AxiosError,
@@ -11,7 +11,7 @@ import axios, {
 
 import type { ApiBody, AdminLoginResp } from './types';
 
-const TOKEN_KEY = 'klein:admin:token';
+const TOKEN_KEY = 'image2api:admin:token';
 
 export interface StoredToken {
   access: string;

@@ -1,9 +1,9 @@
 # 04 · API 规范
 
 > 三套独立 API：
-> - **用户端 API**：`https://api.klein.example` → `:17180`，前缀 `/api/v1`
-> - **管理后台 API**：`https://admin-api.klein.example` → `:17188`，前缀 `/admin/api/v1`
-> - **OpenAI 兼容 API**：`https://openai.klein.example` → `:17200`，前缀 `/v1`
+> - **用户端 API**：`https://api.image2api.example` → `:17180`，前缀 `/api/v1`
+> - **管理后台 API**：`https://admin-api.image2api.example` → `:17188`，前缀 `/admin/api/v1`
+> - **OpenAI 兼容 API**：`https://openai.image2api.example` → `:17200`，前缀 `/v1`
 
 ---
 
@@ -15,11 +15,11 @@
 - 必带头：
   - `X-Request-Id`：UUID v4 / ULID（前端生成，后端透传）
   - `Accept-Language`：`zh-CN` / `en-US`（默认 zh-CN）
-  - `User-Agent`：客户端标识 `KleinAI-Web/1.0.0`
+  - `User-Agent`：客户端标识 `image2api-Web/1.0.0`
 - 鉴权头三选一：
   - 用户端：`Authorization: Bearer <accessToken>`
   - 后台：同上 + `X-Admin-Token`
-  - OpenAI 兼容：`Authorization: Bearer sk-klein-xxxxx`
+  - OpenAI 兼容：`Authorization: Bearer sk-image2api-xxxxx`
 - 写操作必带 `Idempotency-Key: <UUIDv4>`（创建生成任务、充值下单、CDK 兑换等）
 - 时间统一 ISO 8601：`2026-04-27T13:30:00.123+08:00`
 - 分页：`?page=1&page_size=20`，最大 `page_size=100`
@@ -73,7 +73,7 @@
 
 ### 1.5 WebSocket
 
-- 入口：`wss://api.klein.example/ws?token=<accessToken>` （`:17280`）
+- 入口：`wss://api.image2api.example/ws?token=<accessToken>` （`:17280`）
 - 心跳：客户端每 25s 发 `{"op":"ping"}`，服务端 `{"op":"pong"}`
 - 任务进度推送：
 
@@ -247,7 +247,7 @@ Idempotency-Key: 9b1d...
 
 ```json
 POST /api/v1/redeem
-{ "code": "KLEIN-PRO-2026Q1-XXXXXXXX" }
+{ "code": "IMAGE2API-PRO-2026Q1-XXXXXXXX" }
 ```
 
 ```json
@@ -431,7 +431,7 @@ grok,grok-001,cookie,"<long cookie>",https://x.ai,10,0,grok-video-default,
 ## 4. OpenAI 兼容 API（`/v1`）
 
 > 让用户用 `openai-python` / 任意 SDK，仅替换 `base_url` 和 `api_key` 即可调用。
-> 鉴权：`Authorization: Bearer sk-klein-xxxxx`（用户在 KEY 管理页生成）。
+> 鉴权：`Authorization: Bearer sk-image2api-xxxxx`（用户在 KEY 管理页生成）。
 
 ### 4.1 图像生成（OpenAI Images API 兼容）
 
@@ -533,7 +533,7 @@ DELETE /v1/videos/generations/{id}      # 取消
 ### 4.4 模型与计费查询
 
 ```
-GET  /v1/models                     # 兼容 OpenAI，返回 KleinAI 全模型
+GET  /v1/models                     # 兼容 OpenAI，返回 image2api 全模型
 GET  /v1/dashboard/billing/credit_grants    # 余额查询（返回点数）
 ```
 
@@ -550,8 +550,8 @@ GET  /v1/dashboard/billing/credit_grants    # 余额查询（返回点数）
 1. **越权**：所有 `/api/v1/**` 接口必须显式带 `user_id` 过滤；`/admin/**` 必须 `permission` 校验。
 2. **签名（开放 API 可选强制）**：
    ```
-   X-Klein-Ts: 1714200000
-   X-Klein-Sign: HMAC_SHA256(secret, ts + method + path + sha256(body))
+   X-Image2API-Ts: 1714200000
+   X-Image2API-Sign: HMAC_SHA256(secret, ts + method + path + sha256(body))
    ```
 3. **回放防御**：5 分钟时间窗 + Redis 记录 nonce。
 4. **CORS**：白名单仅前端域名；管理后台单独配置。

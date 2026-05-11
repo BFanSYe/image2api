@@ -1,5 +1,5 @@
 # =====================================================
-# KleinAI · 本地开发依赖（只起 MySQL + Redis）
+# image2api · 本地开发依赖（只起 MySQL + Redis）
 #
 # 使用：
 #   cd deploy
@@ -16,7 +16,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: klein-mysql-dev
+    container_name: image2api-mysql-dev
     restart: unless-stopped
     command:
       - --default-authentication-plugin=caching_sha2_password
@@ -26,33 +26,33 @@ services:
       - --max_connections=200
       - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
     environment:
-      MYSQL_ROOT_PASSWORD: klein-root-dev
-      MYSQL_DATABASE: klein_ai
-      MYSQL_USER: klein
-      MYSQL_PASSWORD: klein123
+      MYSQL_ROOT_PASSWORD: image2api-root-dev
+      MYSQL_DATABASE: image2api
+      MYSQL_USER: image2api
+      MYSQL_PASSWORD: image2api123
       TZ: Asia/Shanghai
     ports:
-      - "127.0.0.1:${KLEIN_DEV_MYSQL_PORT:-13306}:3306"
+      - "127.0.0.1:${IMAGE2API_DEV_MYSQL_PORT:-13306}:3306"
     volumes:
-      - klein-mysql-dev-data:/var/lib/mysql
+      - image2api-mysql-dev-data:/var/lib/mysql
       # 首次初始化时自动跑迁移：自定义脚本会剥掉 goose Down 段后再喂给 mysql
       - ./mysql-init/01-run-migrations.sh:/docker-entrypoint-initdb.d/01-run-migrations.sh:ro
       - ../backend/migrations:/migrations:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pklein-root-dev"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pimage2api-root-dev"]
       interval: 10s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: klein-redis-dev
+    container_name: image2api-redis-dev
     restart: unless-stopped
     command: redis-server --appendonly yes
     ports:
-      - "127.0.0.1:${KLEIN_DEV_REDIS_PORT:-16379}:6379"
+      - "127.0.0.1:${IMAGE2API_DEV_REDIS_PORT:-16379}:6379"
     volumes:
-      - klein-redis-dev-data:/data
+      - image2api-redis-dev-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -60,5 +60,5 @@ services:
       retries: 5
 
 volumes:
-  klein-mysql-dev-data:
-  klein-redis-dev-data:
+  image2api-mysql-dev-data:
+  image2api-redis-dev-data:

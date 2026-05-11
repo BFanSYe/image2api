@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kleinai/backend/internal/dto"
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/crypto"
-	"github.com/kleinai/backend/pkg/errcode"
+	"github.com/zuiyinggg/image2api/backend/internal/dto"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/repo"
+	"github.com/zuiyinggg/image2api/backend/pkg/crypto"
+	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
 )
 
 // ProxyService 代理 CRUD 与运行时 URL 拼装。
@@ -235,17 +235,17 @@ func validateProtocol(proto string) error {
 
 func proxyToResp(p *model.Proxy) *dto.ProxyResp {
 	r := &dto.ProxyResp{
-		ID:           p.ID,
-		Name:         p.Name,
-		Protocol:     p.Protocol,
-		Host:         p.Host,
-		Port:         p.Port,
-		Status:       p.Status,
-		HasPassword:  len(p.PasswordEnc) > 0,
-		LastCheckOK:  p.LastCheckOK,
-		LastCheckMs:  p.LastCheckMs,
-		CreatedAt:    p.CreatedAt.Unix(),
-		UpdatedAt:    p.UpdatedAt.Unix(),
+		ID:          p.ID,
+		Name:        p.Name,
+		Protocol:    p.Protocol,
+		Host:        p.Host,
+		Port:        p.Port,
+		Status:      p.Status,
+		HasPassword: len(p.PasswordEnc) > 0,
+		LastCheckOK: p.LastCheckOK,
+		LastCheckMs: p.LastCheckMs,
+		CreatedAt:   p.CreatedAt.Unix(),
+		UpdatedAt:   p.UpdatedAt.Unix(),
 	}
 	if p.Username != nil {
 		r.Username = *p.Username

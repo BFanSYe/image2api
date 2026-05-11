@@ -26,7 +26,7 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.74.0(react@18.3.1))
-      '@kleinai/theme':
+      '@image2api/theme':
         specifier: workspace:*
         version: link:../../packages/theme
       '@tanstack/react-query':
@@ -90,7 +90,7 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.9.0
         version: 3.10.0(react-hook-form@7.74.0(react@18.3.1))
-      '@kleinai/theme':
+      '@image2api/theme':
         specifier: workspace:*
         version: link:../../packages/theme
       '@tanstack/react-query':

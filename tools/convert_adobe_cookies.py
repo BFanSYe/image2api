@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Convert Adobe browser-export cookie JSONL into the import format used by gpt2api.
+Convert Adobe browser-export cookie JSONL into the import format used by image2api.
 
 Input format:
   One JSON object per line, each with a "cookie" field containing full browser
@@ -107,7 +107,7 @@ def verify(out: Path) -> dict[str, object]:
 
 def main() -> int:
     default_src = Path("C:/Users/Administrator/Desktop/12321/50\u4e2aadobe 4k.txt")
-    parser = argparse.ArgumentParser(description="Convert Adobe cookie JSONL to gpt2api import JSON.")
+    parser = argparse.ArgumentParser(description="Convert Adobe cookie JSONL to image2api import JSON.")
     parser.add_argument("src", nargs="?", type=Path, default=default_src, help="source .txt/.jsonl file")
     parser.add_argument("-o", "--out", type=Path, help="output .json file")
     parser.add_argument("--name-prefix", default="adobe", help="generated account name prefix")

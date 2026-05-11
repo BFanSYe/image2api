@@ -1,6 +1,6 @@
-export { default as kleinPreset } from './tailwind.preset';
+export { default as image2apiPreset } from './tailwind.preset';
 
-export const KLEIN_TOKENS = {
+export const IMAGE2API_TOKENS = {
   primary: 'var(--klein-600)',
   primaryGradient: 'var(--klein-gradient)',
   glow: 'var(--klein-glow)',

@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
 )
 
 // ProxyRepo 代理仓储。
@@ -100,10 +100,10 @@ func (r *ProxyRepo) MarkCheck(ctx context.Context, id uint64, ok bool, latencyMs
 		st = model.ProxyCheckFail
 	}
 	fields := map[string]any{
-		"last_check_at":  now,
-		"last_check_ok":  st,
-		"last_check_ms":  latencyMs,
-		"last_error":     errMsg,
+		"last_check_at": now,
+		"last_check_ok": st,
+		"last_check_ms": latencyMs,
+		"last_error":    errMsg,
 	}
 	return r.db.WithContext(ctx).Model(&model.Proxy{}).
 		Where("id = ?", id).Updates(fields).Error

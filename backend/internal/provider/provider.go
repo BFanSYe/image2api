@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
 )
 
 // Kind 生成类型。

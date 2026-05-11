@@ -12,7 +12,7 @@ COPY packages packages
 COPY apps/user apps/user
 
 RUN pnpm install --frozen-lockfile=false
-RUN pnpm --filter @kleinai/user build
+RUN pnpm --filter @image2api/user build
 
 FROM nginx:1.27-alpine AS runtime
 COPY --from=build /repo/apps/user/dist /usr/share/nginx/html

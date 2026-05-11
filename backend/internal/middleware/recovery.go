@@ -8,9 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/logger"
-	"github.com/kleinai/backend/pkg/response"
+	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
+	"github.com/zuiyinggg/image2api/backend/pkg/logger"
+	"github.com/zuiyinggg/image2api/backend/pkg/response"
 )
 
 // Recovery 捕获 panic 并返回 500，同时记录堆栈。

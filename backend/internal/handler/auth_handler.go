@@ -4,11 +4,11 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/internal/dto"
-	"github.com/kleinai/backend/internal/middleware"
-	"github.com/kleinai/backend/internal/service"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/response"
+	"github.com/zuiyinggg/image2api/backend/internal/dto"
+	"github.com/zuiyinggg/image2api/backend/internal/middleware"
+	"github.com/zuiyinggg/image2api/backend/internal/service"
+	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
+	"github.com/zuiyinggg/image2api/backend/pkg/response"
 )
 
 // AuthHandler 用户端 auth handler。

@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/zuiyinggg/image2api/backend/internal/model"
 )
 
 // SystemConfigRepo system_config 仓储。
@@ -53,7 +53,7 @@ func (r *SystemConfigRepo) Upsert(ctx context.Context, key, value string, update
 	row := &model.SystemConfig{Key: key, Value: value, UpdatedBy: updatedBy, Remark: remark}
 	return r.db.WithContext(ctx).
 		Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "key"}},
+			Columns:   []clause.Column{{Name: "key"}},
 			DoUpdates: clause.AssignmentColumns([]string{"value", "updated_by", "updated_at"}),
 		}).
 		Create(row).Error
