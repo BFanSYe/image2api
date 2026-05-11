@@ -39,7 +39,8 @@ x-backend-env: &backend-env
   IMAGE2API_GROK_DYNAMIC_STATSIG: 'true'
   IMAGE2API_LOG_LEVEL: info
   IMAGE2API_LOG_DIR: /app/logs
-  IMAGE2API_CORS_ORIGINS: http://localhost:17080,http://localhost:17088,http://127.0.0.1:17080,http://127.0.0.1:17088,http://167.88.180.191:17080,http://167.88.180.191:17088
+  IMAGE2API_STORAGE_ROOT: /app/storage/public
+  IMAGE2API_CORS_ORIGINS: http://localhost:17080,http://localhost:17088,http://127.0.0.1:17080,http://127.0.0.1:17088
   TZ: Asia/Shanghai
 
 services:

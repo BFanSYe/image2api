@@ -126,9 +126,18 @@ docker logs -f image2api-worker-dev
 
 ### 4. 生产 Compose
 
+如果已经准备好 `deploy/certs/*.crt` 和 `deploy/certs/*.key`, 可直接使用带 Nginx TLS 入口的生产栈:
+
 ```bash
 cd deploy
 docker compose --env-file ./env/.env.local -f docker-compose.yml up -d --build
+```
+
+如果先在新服务器本机验证, 或前面另有 Caddy/Nginx 反代, 可使用 no-edge 栈:
+
+```bash
+cd deploy
+docker compose -f docker-compose.server.yml -f docker-compose.no-edge.yml up -d --build
 ```
 
 访问入口:

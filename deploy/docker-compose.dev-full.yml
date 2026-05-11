@@ -38,6 +38,7 @@ x-backend-env: &backend-env
   IMAGE2API_GROK_BASE_URL: https://api.x.ai
   IMAGE2API_LOG_LEVEL: info
   IMAGE2API_LOG_DIR: /app/logs
+  IMAGE2API_STORAGE_ROOT: /app/storage/public
   IMAGE2API_CORS_ORIGINS: http://localhost:17080,http://localhost:17088,http://127.0.0.1:17080,http://127.0.0.1:17088
   TZ: Asia/Shanghai
 
@@ -109,6 +110,7 @@ services:
       retries: 5
     volumes:
       - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       mysql: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -132,6 +134,7 @@ services:
       retries: 5
     volumes:
       - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       api: { condition: service_started }
     networks: [image2api-dev]
@@ -154,6 +157,7 @@ services:
       retries: 5
     volumes:
       - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       api: { condition: service_started }
     networks: [image2api-dev]
@@ -169,6 +173,7 @@ services:
       IMAGE2API_NODE_ID: '4'
     volumes:
       - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       mysql: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -209,6 +214,7 @@ volumes:
   image2api-mysql-dev-data:
   image2api-redis-dev-data:
   image2api-logs:
+  image2api-storage:
 
 networks:
   image2api-dev:

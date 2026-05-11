@@ -14,8 +14,16 @@ x-common-env: &common-env
   IMAGE2API_AES_KEY: ${IMAGE2API_AES_KEY}
   IMAGE2API_OPENAI_BASE: ${IMAGE2API_OPENAI_BASE:-https://api.openai.com}
   IMAGE2API_GROK_BASE: ${IMAGE2API_GROK_BASE:-https://api.x.ai}
+  IMAGE2API_PROVIDER_GPT: ${IMAGE2API_PROVIDER_GPT:-real}
+  IMAGE2API_PROVIDER_GROK: ${IMAGE2API_PROVIDER_GROK:-real}
+  IMAGE2API_GPT_BASE_URL: ${IMAGE2API_GPT_BASE_URL:-https://api.openai.com}
+  IMAGE2API_GROK_BASE_URL: ${IMAGE2API_GROK_BASE_URL:-https://grok.com}
+  IMAGE2API_GROK_CF_STATE_PATH: ${IMAGE2API_GROK_CF_STATE_PATH:-/app/storage/grok_cf.json}
+  IMAGE2API_GROK_UPLOAD_NORMALIZE_JPEG: ${IMAGE2API_GROK_UPLOAD_NORMALIZE_JPEG:-true}
+  IMAGE2API_GROK_DYNAMIC_STATSIG: ${IMAGE2API_GROK_DYNAMIC_STATSIG:-true}
   IMAGE2API_CORS_ORIGINS: ${IMAGE2API_CORS_ORIGINS}
   IMAGE2API_LOG_DIR: /app/logs
+  IMAGE2API_STORAGE_ROOT: ${IMAGE2API_STORAGE_ROOT:-/app/storage/public}
   TZ: Asia/Shanghai
 
 services:
@@ -77,6 +85,7 @@ services:
     expose: ["17180"]
     volumes:
       - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -101,6 +110,7 @@ services:
     expose: ["17188"]
     volumes:
       - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -125,6 +135,7 @@ services:
     expose: ["17200"]
     volumes:
       - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -148,6 +159,7 @@ services:
       IMAGE2API_NODE_ID: 4
     volumes:
       - image2api-logs:/app/logs
+      - image2api-storage:/app/storage
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -195,6 +207,7 @@ volumes:
   image2api-mysql-data:
   image2api-redis-data:
   image2api-logs:
+  image2api-storage:
 
 networks:
   image2api:
