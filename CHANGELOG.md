@@ -1,9 +1,11 @@
 # Changelog
 
-## v0.1.0
+## v0.1.0 - 2026-05-12
 
 ### Added
 
+- 新增公开发布部署快速开始文档.
+- 新增发布流程文档和 GitHub Release 首版说明.
 - 统一项目显示名为 `image2api`.
 - 统一 Docker 镜像命名为 `image2api/backend`, `image2api/user-web`, `image2api/admin-web`.
 - 统一后端 Go module 为 `github.com/BFanSYe/image2api/backend`.

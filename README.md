@@ -1,8 +1,12 @@
 # image2api
 
+[![CI](https://github.com/BFanSYe/image2api/actions/workflows/ci.yml/badge.svg)](https://github.com/BFanSYe/image2api/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/BFanSYe/image2api?include_prereleases&sort=semver)](https://github.com/BFanSYe/image2api/releases)
+[![License](https://img.shields.io/badge/license-proprietary-lightgrey.svg)](LICENSE)
+
 image2api 是一个面向图片生成和 OpenAI 兼容接口的 AIGC 聚合平台。项目包含用户创作端, 管理后台, OpenAI 兼容 API, 后台任务 Worker, 账号池和计费运营能力。
 
-本仓库是独立维护的二开版本, 项目显示名统一为 `image2api`, Docker 镜像名统一以 `image2api` 开头。
+本仓库是独立维护的二开版本, 项目显示名统一为 `image2api`, Docker 镜像名统一以 `image2api` 开头。当前公开发布不等于自由开源授权, 许可证见 [LICENSE](LICENSE).
 
 ## 核心能力
 
@@ -75,6 +79,28 @@ ghcr.io/BFanSYe/image2api-backend
 ghcr.io/BFanSYe/image2api-user-web
 ghcr.io/BFanSYe/image2api-admin-web
 ```
+
+## 部署模式选择
+
+| 场景 | Compose 文件 | 入口 | 说明 |
+|---|---|---|---|
+| 本机验证 / 外部反代 | `docker-compose.server.yml` + `docker-compose.no-edge.yml` | `127.0.0.1:17080`, `127.0.0.1:17088` | 推荐新服务器首次部署使用. |
+| 内置 Nginx TLS | `docker-compose.yml` | `17080`, `17088`, `17200` | 需要提前准备证书和真实域名. |
+| 本地依赖开发 | `docker-compose.dev.yml` | MySQL / Redis | 业务进程在宿主机运行. |
+| 全容器开发 | `docker-compose.dev-full.yml` | `17080`, `17088` | 无需宿主机安装 Go/Node. |
+
+完整部署步骤见 [部署快速开始](docs/DEPLOYMENT_QUICKSTART.md).
+
+## 默认后台账号
+
+全新数据库初始化后默认管理员为:
+
+```text
+username: admin
+password: admin123
+```
+
+首次登录后立即修改密码。
 
 ## 快速启动
 
@@ -206,6 +232,10 @@ pnpm --filter @image2api/admin dev
 - [API 规范](docs/04-API规范.md)
 - [前端规范](docs/05-前端规范.md)
 - [部署与运维规范](docs/06-部署与运维规范.md)
+- [部署快速开始](docs/DEPLOYMENT_QUICKSTART.md)
+- [上游账号配置](docs/UPSTREAM_ACCOUNTS.md)
+- [图片生成说明](docs/IMAGE_GENERATION.md)
+- [发布流程](docs/RELEASE.md)
 - [安全说明](SECURITY.md)
 - [变更记录](CHANGELOG.md)
 
