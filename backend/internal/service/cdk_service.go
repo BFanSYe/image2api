@@ -13,10 +13,10 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/zuiyinggg/image2api/backend/internal/model"
-	"github.com/zuiyinggg/image2api/backend/pkg/crypto"
-	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
-	"github.com/zuiyinggg/image2api/backend/pkg/logger"
+	"github.com/BFanSYe/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/pkg/crypto"
+	"github.com/BFanSYe/image2api/backend/pkg/errcode"
+	"github.com/BFanSYe/image2api/backend/pkg/logger"
 )
 
 // CDKService 兑换码服务。

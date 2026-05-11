@@ -14,10 +14,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/zuiyinggg/image2api/backend/internal/provider"
-	"github.com/zuiyinggg/image2api/backend/internal/provider/gpt"
-	"github.com/zuiyinggg/image2api/backend/internal/provider/grok"
-	"github.com/zuiyinggg/image2api/backend/internal/provider/mock"
+	"github.com/BFanSYe/image2api/backend/internal/provider"
+	"github.com/BFanSYe/image2api/backend/internal/provider/gpt"
+	"github.com/BFanSYe/image2api/backend/internal/provider/grok"
+	"github.com/BFanSYe/image2api/backend/internal/provider/mock"
 )
 
 // Build 根据环境变量构造 provider 集。

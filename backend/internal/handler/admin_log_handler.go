@@ -12,12 +12,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/zuiyinggg/image2api/backend/internal/dto"
-	"github.com/zuiyinggg/image2api/backend/internal/model"
-	"github.com/zuiyinggg/image2api/backend/internal/repo"
-	"github.com/zuiyinggg/image2api/backend/pkg/crypto"
-	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
-	"github.com/zuiyinggg/image2api/backend/pkg/response"
+	"github.com/BFanSYe/image2api/backend/internal/dto"
+	"github.com/BFanSYe/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/internal/repo"
+	"github.com/BFanSYe/image2api/backend/pkg/crypto"
+	"github.com/BFanSYe/image2api/backend/pkg/errcode"
+	"github.com/BFanSYe/image2api/backend/pkg/response"
 )
 
 type AdminLogHandler struct {

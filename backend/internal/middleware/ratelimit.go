@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
-	"github.com/zuiyinggg/image2api/backend/pkg/ratelimit"
-	"github.com/zuiyinggg/image2api/backend/pkg/response"
+	"github.com/BFanSYe/image2api/backend/pkg/errcode"
+	"github.com/BFanSYe/image2api/backend/pkg/ratelimit"
+	"github.com/BFanSYe/image2api/backend/pkg/response"
 )
 
 // RateLimitIP IP 限流。

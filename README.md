@@ -71,9 +71,9 @@ image2api/admin-web:latest
 如发布到 GitHub Container Registry, 推荐使用:
 
 ```text
-ghcr.io/zuiyinggg/image2api-backend
-ghcr.io/zuiyinggg/image2api-user-web
-ghcr.io/zuiyinggg/image2api-admin-web
+ghcr.io/BFanSYe/image2api-backend
+ghcr.io/BFanSYe/image2api-user-web
+ghcr.io/BFanSYe/image2api-admin-web
 ```
 
 ## 快速启动
@@ -81,7 +81,7 @@ ghcr.io/zuiyinggg/image2api-admin-web
 ### 1. 拉取代码
 
 ```bash
-git clone https://github.com/zuiyinggg/image2api.git
+git clone https://github.com/BFanSYe/image2api.git
 cd image2api
 ```
 

@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
-	"github.com/zuiyinggg/image2api/backend/pkg/logger"
+	"github.com/BFanSYe/image2api/backend/pkg/errcode"
+	"github.com/BFanSYe/image2api/backend/pkg/logger"
 )
 
 // Body 统一响应结构。

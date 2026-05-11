@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	"github.com/zuiyinggg/image2api/backend/pkg/config"
+	"github.com/BFanSYe/image2api/backend/pkg/config"
 )
 
 type ctxKey struct{}

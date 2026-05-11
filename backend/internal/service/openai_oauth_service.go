@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
-	"github.com/zuiyinggg/image2api/backend/pkg/outbound"
+	"github.com/BFanSYe/image2api/backend/pkg/errcode"
+	"github.com/BFanSYe/image2api/backend/pkg/outbound"
 )
 
 // OpenAITokenResponse OAuth Token 响应（Codex CLI 流）。

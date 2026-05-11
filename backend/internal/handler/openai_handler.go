@@ -10,12 +10,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/zuiyinggg/image2api/backend/internal/middleware"
-	"github.com/zuiyinggg/image2api/backend/internal/model"
-	"github.com/zuiyinggg/image2api/backend/internal/provider"
-	grokweb "github.com/zuiyinggg/image2api/backend/internal/provider/grok"
-	"github.com/zuiyinggg/image2api/backend/internal/repo"
-	"github.com/zuiyinggg/image2api/backend/internal/service"
+	"github.com/BFanSYe/image2api/backend/internal/middleware"
+	"github.com/BFanSYe/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/internal/provider"
+	grokweb "github.com/BFanSYe/image2api/backend/internal/provider/grok"
+	"github.com/BFanSYe/image2api/backend/internal/repo"
+	"github.com/BFanSYe/image2api/backend/internal/service"
 )
 
 // OpenAIHandler serves /v1 compatible downstream APIs.

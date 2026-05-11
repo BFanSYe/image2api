@@ -14,9 +14,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/zuiyinggg/image2api/backend/internal/model"
-	"github.com/zuiyinggg/image2api/backend/internal/repo"
-	"github.com/zuiyinggg/image2api/backend/pkg/logger"
+	"github.com/BFanSYe/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/internal/repo"
+	"github.com/BFanSYe/image2api/backend/pkg/logger"
 )
 
 const defaultGrokCFStatePath = "/app/storage/grok_cf.json"

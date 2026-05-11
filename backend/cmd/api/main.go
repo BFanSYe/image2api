@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zuiyinggg/image2api/backend/internal/bootstrap"
-	"github.com/zuiyinggg/image2api/backend/internal/router"
-	"github.com/zuiyinggg/image2api/backend/pkg/logger"
+	"github.com/BFanSYe/image2api/backend/internal/bootstrap"
+	"github.com/BFanSYe/image2api/backend/internal/router"
+	"github.com/BFanSYe/image2api/backend/pkg/logger"
 )
 
 const serviceName = "api"

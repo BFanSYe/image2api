@@ -1,4 +1,4 @@
-module github.com/zuiyinggg/image2api/backend
+module github.com/BFanSYe/image2api/backend
 
 go 1.24
 

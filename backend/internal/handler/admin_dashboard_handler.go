@@ -3,9 +3,9 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/zuiyinggg/image2api/backend/internal/repo"
-	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
-	"github.com/zuiyinggg/image2api/backend/pkg/response"
+	"github.com/BFanSYe/image2api/backend/internal/repo"
+	"github.com/BFanSYe/image2api/backend/pkg/errcode"
+	"github.com/BFanSYe/image2api/backend/pkg/response"
 )
 
 type AdminDashboardHandler struct {

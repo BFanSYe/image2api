@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/internal/model"
 )
 
 func TestProviderCooldownGrokForbiddenIsTransient(t *testing.T) {

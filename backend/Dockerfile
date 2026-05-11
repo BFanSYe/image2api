@@ -16,17 +16,17 @@ ARG VERSION=dev
 ARG BUILD_TIME=unknown
 
 RUN go build -trimpath -ldflags="-s -w \
-        -X github.com/zuiyinggg/image2api/backend/pkg/version.Build=${VERSION} \
-        -X github.com/zuiyinggg/image2api/backend/pkg/version.Time=${BUILD_TIME}" \
+        -X github.com/BFanSYe/image2api/backend/pkg/version.Build=${VERSION} \
+        -X github.com/BFanSYe/image2api/backend/pkg/version.Time=${BUILD_TIME}" \
     -o /out/api    ./cmd/api  && \
     go build -trimpath -ldflags="-s -w \
-        -X github.com/zuiyinggg/image2api/backend/pkg/version.Build=${VERSION}" \
+        -X github.com/BFanSYe/image2api/backend/pkg/version.Build=${VERSION}" \
     -o /out/admin  ./cmd/admin && \
     go build -trimpath -ldflags="-s -w \
-        -X github.com/zuiyinggg/image2api/backend/pkg/version.Build=${VERSION}" \
+        -X github.com/BFanSYe/image2api/backend/pkg/version.Build=${VERSION}" \
     -o /out/openai ./cmd/openai && \
     go build -trimpath -ldflags="-s -w \
-        -X github.com/zuiyinggg/image2api/backend/pkg/version.Build=${VERSION}" \
+        -X github.com/BFanSYe/image2api/backend/pkg/version.Build=${VERSION}" \
     -o /out/worker ./cmd/worker
 
 # ----- 运行阶段：distroless · 非 root -----

@@ -26,8 +26,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/zuiyinggg/image2api/backend/internal/provider"
-	"github.com/zuiyinggg/image2api/backend/pkg/outbound"
+	"github.com/BFanSYe/image2api/backend/internal/provider"
+	"github.com/BFanSYe/image2api/backend/pkg/outbound"
 )
 
 var grokCFCache = struct {

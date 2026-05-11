@@ -6,7 +6,7 @@
 
 - 统一项目显示名为 `image2api`.
 - 统一 Docker 镜像命名为 `image2api/backend`, `image2api/user-web`, `image2api/admin-web`.
-- 统一后端 Go module 为 `github.com/zuiyinggg/image2api/backend`.
+- 统一后端 Go module 为 `github.com/BFanSYe/image2api/backend`.
 - 统一前端 workspace 包名为 `@image2api/*`.
 - 支持后台 API key 类型上游账号用于原生图片生成.
 - 支持上游原生 `gpt-image-2` Responses/Image generation 路线.

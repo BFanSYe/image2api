@@ -2,7 +2,7 @@
 # 端口约定：api=17180  admin=17188  openai=17200  pprof=17590
 
 ENV ?= dev
-APP_PKG := github.com/zuiyinggg/image2api/backend
+APP_PKG := github.com/BFanSYe/image2api/backend
 LDFLAGS := -s -w -X $(APP_PKG)/pkg/version.Build=$(shell git rev-parse --short HEAD 2>/dev/null || echo dev) \
                  -X $(APP_PKG)/pkg/version.Time=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 

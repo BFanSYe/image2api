@@ -6,12 +6,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/zuiyinggg/image2api/backend/internal/bootstrap"
-	"github.com/zuiyinggg/image2api/backend/internal/handler"
-	"github.com/zuiyinggg/image2api/backend/internal/middleware"
-	"github.com/zuiyinggg/image2api/backend/internal/repo"
-	"github.com/zuiyinggg/image2api/backend/internal/service"
-	"github.com/zuiyinggg/image2api/backend/pkg/jwtx"
+	"github.com/BFanSYe/image2api/backend/internal/bootstrap"
+	"github.com/BFanSYe/image2api/backend/internal/handler"
+	"github.com/BFanSYe/image2api/backend/internal/middleware"
+	"github.com/BFanSYe/image2api/backend/internal/repo"
+	"github.com/BFanSYe/image2api/backend/internal/service"
+	"github.com/BFanSYe/image2api/backend/pkg/jwtx"
 )
 
 // MountAdmin 在 root 上挂载 /admin/api/v1。

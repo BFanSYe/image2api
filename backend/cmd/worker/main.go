@@ -12,10 +12,10 @@ import (
 	"github.com/hibiken/asynq"
 	"go.uber.org/zap"
 
-	"github.com/zuiyinggg/image2api/backend/internal/bootstrap"
-	"github.com/zuiyinggg/image2api/backend/internal/repo"
-	"github.com/zuiyinggg/image2api/backend/internal/service"
-	"github.com/zuiyinggg/image2api/backend/pkg/logger"
+	"github.com/BFanSYe/image2api/backend/internal/bootstrap"
+	"github.com/BFanSYe/image2api/backend/internal/repo"
+	"github.com/BFanSYe/image2api/backend/internal/service"
+	"github.com/BFanSYe/image2api/backend/pkg/logger"
 )
 
 const serviceName = "worker"

@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/internal/model"
 )
 
 // SystemConfigRepo system_config 仓储。

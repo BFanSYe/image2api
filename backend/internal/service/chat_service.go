@@ -16,14 +16,14 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/zuiyinggg/image2api/backend/internal/model"
-	"github.com/zuiyinggg/image2api/backend/internal/provider"
-	grokweb "github.com/zuiyinggg/image2api/backend/internal/provider/grok"
-	"github.com/zuiyinggg/image2api/backend/internal/repo"
-	"github.com/zuiyinggg/image2api/backend/pkg/crypto"
-	"github.com/zuiyinggg/image2api/backend/pkg/errcode"
-	"github.com/zuiyinggg/image2api/backend/pkg/logger"
-	"github.com/zuiyinggg/image2api/backend/pkg/outbound"
+	"github.com/BFanSYe/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/internal/provider"
+	grokweb "github.com/BFanSYe/image2api/backend/internal/provider/grok"
+	"github.com/BFanSYe/image2api/backend/internal/repo"
+	"github.com/BFanSYe/image2api/backend/pkg/crypto"
+	"github.com/BFanSYe/image2api/backend/pkg/errcode"
+	"github.com/BFanSYe/image2api/backend/pkg/logger"
+	"github.com/BFanSYe/image2api/backend/pkg/outbound"
 )
 
 type ChatService struct {

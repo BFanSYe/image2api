@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/zuiyinggg/image2api/backend/internal/provider"
+	"github.com/BFanSYe/image2api/backend/internal/provider"
 )
 
 func TestExtractWebImageToolIDs(t *testing.T) {

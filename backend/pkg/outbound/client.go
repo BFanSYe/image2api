@@ -18,7 +18,7 @@ import (
 	"golang.org/x/net/http2"
 	xproxy "golang.org/x/net/proxy"
 
-	"github.com/zuiyinggg/image2api/backend/pkg/proxyx"
+	"github.com/BFanSYe/image2api/backend/pkg/proxyx"
 )
 
 const (

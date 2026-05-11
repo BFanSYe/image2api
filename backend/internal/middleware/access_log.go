@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/zuiyinggg/image2api/backend/pkg/logger"
+	"github.com/BFanSYe/image2api/backend/pkg/logger"
 )
 
 // AccessLog 记录 HTTP 访问日志（结构化 JSON）。

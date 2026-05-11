@@ -16,14 +16,14 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/zuiyinggg/image2api/backend/pkg/config"
-	"github.com/zuiyinggg/image2api/backend/pkg/crypto"
-	"github.com/zuiyinggg/image2api/backend/pkg/database"
-	"github.com/zuiyinggg/image2api/backend/pkg/jwtx"
-	"github.com/zuiyinggg/image2api/backend/pkg/logger"
-	"github.com/zuiyinggg/image2api/backend/pkg/ratelimit"
-	"github.com/zuiyinggg/image2api/backend/pkg/snowflake"
-	"github.com/zuiyinggg/image2api/backend/pkg/version"
+	"github.com/BFanSYe/image2api/backend/pkg/config"
+	"github.com/BFanSYe/image2api/backend/pkg/crypto"
+	"github.com/BFanSYe/image2api/backend/pkg/database"
+	"github.com/BFanSYe/image2api/backend/pkg/jwtx"
+	"github.com/BFanSYe/image2api/backend/pkg/logger"
+	"github.com/BFanSYe/image2api/backend/pkg/ratelimit"
+	"github.com/BFanSYe/image2api/backend/pkg/snowflake"
+	"github.com/BFanSYe/image2api/backend/pkg/version"
 )
 
 // Deps 启动后向业务层注入的依赖集合。

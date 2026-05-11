@@ -9,7 +9,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/internal/model"
 )
 
 // WalletRepo 钱包 / 流水仓储。

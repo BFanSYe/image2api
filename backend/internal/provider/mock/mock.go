@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zuiyinggg/image2api/backend/internal/provider"
+	"github.com/BFanSYe/image2api/backend/internal/provider"
 )
 
 // New 构造。kind 标识自身角色（gpt / grok）。

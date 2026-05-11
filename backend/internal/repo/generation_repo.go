@@ -10,7 +10,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/zuiyinggg/image2api/backend/internal/model"
+	"github.com/BFanSYe/image2api/backend/internal/model"
 )
 
 // GenerationRepo 生成任务仓储。
