@@ -142,9 +142,16 @@ docker compose -f docker-compose.server.yml -f docker-compose.no-edge.yml up -d 
 
 访问入口:
 
-- 用户前台: `http://你的域名:17080`
-- 管理后台: `http://你的域名:17088/admin/`
-- OpenAI 兼容 API: `http://你的域名:17200/v1`
+带 Nginx TLS 入口时:
+
+- 用户前台: `https://你的域名:17080`
+- 管理后台: `https://你的域名:17088/admin/`
+- OpenAI 兼容 API: `https://你的域名:17200/v1`
+
+no-edge 本机验证时:
+
+- 用户前台: `http://127.0.0.1:17080`
+- 管理后台: `http://127.0.0.1:17088/admin/`
 
 ## 本地开发
 
