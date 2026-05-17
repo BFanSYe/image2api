@@ -307,13 +307,14 @@ func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask
 	results := make([]*model.GenerationResult, 0, len(res.Assets))
 	for i, a := range res.Assets {
 		gr := &model.GenerationResult{
-			TaskID: t.TaskID,
-			UserID: t.UserID,
-			Kind:   t.Kind,
-			Seq:    int8(i),
-			URL:    a.URL,
-			Width:  intPtr(a.Width),
-			Height: intPtr(a.Height),
+			TaskID:   t.TaskID,
+			UserID:   t.UserID,
+			Kind:     t.Kind,
+			Seq:      int8(i),
+			URL:      a.URL,
+			Width:    intPtr(a.Width),
+			Height:   intPtr(a.Height),
+			IsPublic: 1,
 		}
 		if a.ThumbURL != "" {
 			s := a.ThumbURL

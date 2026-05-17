@@ -66,3 +66,26 @@ type GenerationResultResp struct {
 	Height     int    `json:"height,omitempty"`
 	DurationMs int    `json:"duration_ms,omitempty"`
 }
+
+// InspireItemResp 灵感库单条记录。
+type InspireItemResp struct {
+	ResultID   uint64 `json:"result_id"`
+	TaskID     string `json:"task_id"`
+	Seq        int    `json:"seq"`
+	URL        string `json:"url"`
+	ThumbURL   string `json:"thumb_url,omitempty"`
+	Width      int    `json:"width,omitempty"`
+	Height     int    `json:"height,omitempty"`
+	DurationMs int    `json:"duration_ms,omitempty"`
+	Kind       string `json:"kind"`
+	ModelCode  string `json:"model"`
+	Prompt     string `json:"prompt,omitempty"`
+	Author     string `json:"author"`
+	CreatedAt  int64  `json:"created_at"`
+}
+
+// InspireFeedResp 灵感库分页响应（游标）。
+type InspireFeedResp struct {
+	List       []InspireItemResp `json:"list"`
+	NextCursor uint64            `json:"next_cursor,omitempty"`
+}

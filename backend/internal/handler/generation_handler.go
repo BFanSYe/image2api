@@ -360,6 +360,56 @@ func (h *GenerationHandler) Asset(c *gin.Context) {
 	_, _ = io.Copy(c.Writer, resp.Body)
 }
 
+// Inspire GET /api/v1/inspire/feed?kind=image|video&cursor=&page_size=
+func (h *GenerationHandler) Inspire(c *gin.Context) {
+	kind := strings.ToLower(strings.TrimSpace(c.Query("kind")))
+	cursor, _ := strconv.ParseUint(strings.TrimSpace(c.Query("cursor")), 10, 64)
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "30"))
+	rows, next, err := h.repo.ListInspireFeed(c.Request.Context(), repo.InspireFeedFilter{
+		Kind:     kind,
+		Cursor:   cursor,
+		PageSize: pageSize,
+	})
+	if err != nil {
+		response.Fail(c, errcode.DBError.Wrap(err))
+		return
+	}
+	out := make([]dto.InspireItemResp, 0, len(rows))
+	for _, r := range rows {
+		thumb := ""
+		if r.ThumbURL != nil {
+			thumb = generationResultURL(r.TaskID, int(r.Seq), *r.ThumbURL, true)
+		} else if r.Kind == string(provider.KindVideo) {
+			if derived := deriveGrokPreviewImageURL(r.URL); derived != "" {
+				thumb = generationResultURL(r.TaskID, int(r.Seq), derived, true)
+			}
+		}
+		item := dto.InspireItemResp{
+			ResultID:  r.ResultID,
+			TaskID:    r.TaskID,
+			Seq:       int(r.Seq),
+			URL:       generationResultURL(r.TaskID, int(r.Seq), r.URL, false),
+			ThumbURL:  thumb,
+			Kind:      r.Kind,
+			ModelCode: r.ModelCode,
+			Prompt:    r.Prompt,
+			Author:    r.UserLabel,
+			CreatedAt: r.CreatedAt.Unix(),
+		}
+		if r.Width != nil {
+			item.Width = *r.Width
+		}
+		if r.Height != nil {
+			item.Height = *r.Height
+		}
+		if r.DurationMs != nil {
+			item.DurationMs = *r.DurationMs
+		}
+		out = append(out, item)
+	}
+	response.OK(c, dto.InspireFeedResp{List: out, NextCursor: next})
+}
+
 // === helpers ===
 
 func parseTextGenerationResp(raw []byte, fallbackModel string) *dto.TextGenerationResp {

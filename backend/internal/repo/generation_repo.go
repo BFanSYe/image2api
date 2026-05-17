@@ -41,6 +41,23 @@ type AdminGenerationLogRow struct {
 	Error      *string
 }
 
+type InspireFeedRow struct {
+	ResultID   uint64
+	TaskID     string
+	Seq        int8
+	URL        string
+	ThumbURL   *string
+	Width      *int
+	Height     *int
+	DurationMs *int
+	Kind       string
+	ModelCode  string
+	Prompt     string
+	UserID     uint64
+	UserLabel  string
+	CreatedAt  time.Time
+}
+
 type AdminGenerationUpstreamLogRow struct {
 	ID              uint64
 	TaskID          string
@@ -396,4 +413,69 @@ func truncateStr(s string, n int) string {
 		return s
 	}
 	return string(r[:n])
+}
+
+// InspireFeedFilter governs the public inspiration feed query.
+type InspireFeedFilter struct {
+	Kind     string
+	Cursor   uint64
+	PageSize int
+}
+
+// ListInspireFeed returns a public, cursor-paginated stream of successful image/video results.
+// Results are joined with their parent task (for prompt/model) and the author user (for label).
+func (r *GenerationRepo) ListInspireFeed(ctx context.Context, f InspireFeedFilter) ([]*InspireFeedRow, uint64, error) {
+	if f.PageSize <= 0 || f.PageSize > 60 {
+		f.PageSize = 30
+	}
+	where := []string{
+		"r.deleted_at IS NULL",
+		"r.is_public = 1",
+		"t.deleted_at IS NULL",
+		"t.status = 2",
+		"r.kind IN ('image', 'video')",
+	}
+	args := []any{}
+	if f.Kind == "image" || f.Kind == "video" {
+		where = append(where, "r.kind = ?")
+		args = append(args, f.Kind)
+	}
+	if f.Cursor > 0 {
+		where = append(where, "r.id < ?")
+		args = append(args, f.Cursor)
+	}
+	whereSQL := strings.Join(where, " AND ")
+	q := `SELECT
+  r.id          AS result_id,
+  r.task_id     AS task_id,
+  r.seq         AS seq,
+  r.url         AS url,
+  r.thumb_url   AS thumb_url,
+  r.width       AS width,
+  r.height      AS height,
+  r.duration_ms AS duration_ms,
+  r.kind        AS kind,
+  t.model_code  AS model_code,
+  t.prompt      AS prompt,
+  t.user_id     AS user_id,
+  COALESCE(NULLIF(u.username, ''), SUBSTRING_INDEX(NULLIF(u.email, ''), '@', 1), CONCAT('user_', t.user_id)) AS user_label,
+  r.created_at  AS created_at
+FROM generation_result r
+JOIN generation_task t ON t.task_id = r.task_id
+LEFT JOIN ` + "`user`" + ` u ON u.id = t.user_id
+WHERE ` + whereSQL + `
+ORDER BY r.id DESC
+LIMIT ?`
+	queryArgs := append([]any{}, args...)
+	queryArgs = append(queryArgs, f.PageSize+1)
+	var rows []*InspireFeedRow
+	if err := r.db.WithContext(ctx).Raw(q, queryArgs...).Scan(&rows).Error; err != nil {
+		return nil, 0, err
+	}
+	var nextCursor uint64
+	if len(rows) > f.PageSize {
+		nextCursor = rows[f.PageSize-1].ResultID
+		rows = rows[:f.PageSize]
+	}
+	return rows, nextCursor, nil
 }

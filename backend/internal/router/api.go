@@ -57,6 +57,7 @@ func MountAPI(r *gin.Engine, deps *bootstrap.Deps) {
 	v1.GET("/models", genH.Models)
 	v1.GET("/gen/cached/*path", genH.CachedAsset)
 	v1.GET("/gen/assets/:task_id/:seq", genH.Asset)
+	v1.GET("/inspire/feed", genH.Inspire)
 
 	auth := v1.Group("/auth")
 	{
