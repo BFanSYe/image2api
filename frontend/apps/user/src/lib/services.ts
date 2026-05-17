@@ -8,6 +8,7 @@ import type {
   CreateTextBody,
   CreateVideoBody,
   GenerationTask,
+  InspireFeed,
   LoginResp,
   MeResp,
   PageData,
@@ -101,4 +102,17 @@ export const genApi = {
     }),
   deleteHistory: (scope: 'before_3d' | 'before_7d' | 'failed' | 'all') =>
     request<{ deleted: number }>({ method: 'DELETE', url: '/gen/history', params: { scope } }),
+};
+
+export const inspireApi = {
+  feed: (params: { kind?: 'image' | 'video'; cursor?: number; page_size?: number } = {}) =>
+    request<InspireFeed>({
+      method: 'GET',
+      url: '/inspire/feed',
+      params: {
+        kind: params.kind,
+        cursor: params.cursor,
+        page_size: params.page_size ?? 30,
+      },
+    }),
 };

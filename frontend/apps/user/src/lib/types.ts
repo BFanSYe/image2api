@@ -182,3 +182,24 @@ export interface RedeemCDKResp {
   biz: string;
   message: string;
 }
+
+export interface InspireItem {
+  result_id: number;
+  task_id: string;
+  seq: number;
+  url: string;
+  thumb_url?: string;
+  width?: number;
+  height?: number;
+  duration_ms?: number;
+  kind: 'image' | 'video';
+  model: string;
+  prompt?: string;
+  author: string;
+  created_at: number;
+}
+
+export interface InspireFeed {
+  list: InspireItem[];
+  next_cursor?: number;
+}

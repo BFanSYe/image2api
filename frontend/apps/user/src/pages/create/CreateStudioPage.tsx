@@ -221,6 +221,15 @@ export default function CreateStudioPage() {
   }, []);
 
   useEffect(() => {
+    const pending = sessionStorage.getItem('image2api:inspire-prompt');
+    if (pending) {
+      sessionStorage.removeItem('image2api:inspire-prompt');
+      setPrompt(pending);
+      requestAnimationFrame(() => promptRef.current?.focus());
+    }
+  }, [mode]);
+
+  useEffect(() => {
     setTask(null);
     setTextResult('');
     setAttachments([]);
@@ -396,20 +405,20 @@ export default function CreateStudioPage() {
   };
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[1500px] px-4 pb-12 pt-10 sm:px-8 lg:px-12">
-      <section className="mx-auto max-w-[760px]">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-[28px] font-medium tracking-normal text-neutral-950">{modeTitle(mode)}</h1>
+    <div className="mx-auto min-h-screen w-full max-w-[1440px] px-6 pb-16 pt-12 sm:px-10 lg:px-16">
+      <section className="relative z-20 mx-auto max-w-[1080px]">
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-[32px] font-medium tracking-tight">{modeTitle(mode)}</h1>
           <ModeSwitch mode={mode} onChange={(next) => navigate(`/create/${next}`)} />
         </div>
 
-        <div className="rounded-[28px] border border-neutral-200 bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,.10)]">
+        <div className="neon-card p-5">
           <textarea
             ref={promptRef}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={mode === 'image' ? '描述新图片' : mode === 'video' ? '描述新视频' : '写下你想生成的文字内容'}
-            className="studio-prompt min-h-[66px] w-full resize-none border-0 bg-transparent px-2 pt-1 text-[15px] font-normal leading-7 text-neutral-950 outline-none ring-0 placeholder:font-normal placeholder:text-neutral-400 focus:border-0 focus:outline-none focus:ring-0"
+            className="studio-prompt min-h-[80px] w-full resize-none border-0 bg-transparent px-2 pt-1 text-[15px] font-normal leading-7 outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0"
             maxLength={5000}
           />
           <div className="mt-2 flex items-center justify-between gap-3">
@@ -487,7 +496,7 @@ export default function CreateStudioPage() {
       </section>
 
       {mode === 'text' && textResult && (
-        <section className="mx-auto mt-8 max-w-[760px] rounded-[24px] border border-neutral-200 bg-white p-5 text-[15px] leading-7 text-neutral-800 shadow-sm">
+        <section className="mx-auto mt-10 max-w-[1080px] rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-6 text-[15px] leading-7 text-neutral-200">
           <div className="mb-3 flex items-center justify-between text-sm text-neutral-400">
             <span>{textModels.find((m) => m.code === textModel)?.label ?? textModel}</span>
             <span>{textResult.length} 字</span>
@@ -497,24 +506,24 @@ export default function CreateStudioPage() {
       )}
 
       {mode === 'image' && (
-        <section className="mx-auto mt-12 max-w-[760px]">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[20px] font-medium text-neutral-950">创建图片</h2>
+        <section className="mx-auto mt-16 max-w-[1080px]">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-[22px] font-medium">创建图片</h2>
             <div className="flex items-center gap-2 text-neutral-400">
-              <button className="grid h-9 w-9 place-items-center rounded-full border border-neutral-200 hover:text-neutral-900"><ChevronLeft size={18} /></button>
-              <button className="grid h-9 w-9 place-items-center rounded-full border border-neutral-200 hover:text-neutral-900"><ChevronRight size={18} /></button>
+              <button className="grid h-9 w-9 place-items-center rounded-full border border-white/[0.10] hover:text-white"><ChevronLeft size={18} /></button>
+              <button className="grid h-9 w-9 place-items-center rounded-full border border-white/[0.10] hover:text-white"><ChevronRight size={18} /></button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {SUGGESTIONS.map((item) => (
               <button
                 key={item.title}
                 type="button"
                 onClick={() => setPrompt(item.prompt)}
-                className="group relative aspect-[4/5] overflow-hidden rounded-[22px] text-left shadow-sm"
+                className="group relative aspect-[4/5] overflow-hidden rounded-[18px] text-left"
               >
-                <img src={item.image} alt={item.title} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <img src={item.image} alt={item.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <span className="absolute bottom-3 left-3 right-3 text-sm font-medium text-white">{item.title}</span>
               </button>
             ))}
@@ -522,9 +531,9 @@ export default function CreateStudioPage() {
         </section>
       )}
 
-      <section className="mt-14">
-        <div className="mx-auto mb-4 flex max-w-[1500px] items-center justify-between gap-3 px-0">
-          <h2 className="text-[20px] font-medium text-neutral-950">我的作品</h2>
+      <section className="mt-20">
+        <div className="mx-auto mb-6 flex max-w-[1440px] items-center justify-between gap-3 px-0">
+          <h2 className="text-[22px] font-medium">我的作品</h2>
           <div className="flex items-center gap-2">
             <ComposerSelect
               value={String(historyPageSize)}
@@ -552,14 +561,14 @@ export default function CreateStudioPage() {
           </div>
         </div>
         {resultItems.length === 0 ? (
-          <div className="mx-auto grid max-w-[1500px] place-items-center rounded-[24px] border border-dashed border-neutral-200 py-14 text-neutral-400">
+          <div className="mx-auto grid max-w-[1440px] place-items-center rounded-[24px] border border-dashed border-white/[0.08] py-20 text-neutral-400">
             <FileImage size={28} />
             <p className="mt-2 text-sm">{token ? '还没有作品，先生成一张图片吧' : '登录后会在这里显示你的作品'}</p>
           </div>
         ) : (
           <div
-            className="mx-auto max-w-[1500px] columns-1 gap-3 sm:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5"
-            style={{ columnWidth: '220px' }}
+            className="mx-auto max-w-[1440px] columns-1 gap-5 sm:columns-2 lg:columns-3 xl:columns-4"
+            style={{ columnWidth: '300px' }}
           >
             {resultCards.map(({ item, resultIndex, key }) => <WorkCard key={key} item={item} resultIndex={resultIndex} onOpen={setPreview} />)}
           </div>

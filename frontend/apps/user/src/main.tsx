@@ -14,7 +14,7 @@ import '@image2api/theme/tokens.css';
 import '@image2api/theme/animations.css';
 import './index.css';
 
-applyThemeMode((localStorage.getItem('image2api:theme') as 'dark' | 'light' | 'system' | null) ?? 'light');
+applyThemeMode((localStorage.getItem('image2api:theme') as 'dark' | 'light' | 'system' | null) ?? 'dark');
 
 setUnauthorizedHandler(() => {
   useAuthStore.setState({ token: null, me: null });

@@ -12,6 +12,7 @@ const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const CreateStudioPage = lazy(() => import('./pages/create/CreateStudioPage'));
 const HistoryPage = lazy(() => import('./pages/create/HistoryPage'));
+const InspirePage = lazy(() => import('./pages/inspire/InspirePage'));
 const BillingPage = lazy(() => import('./pages/billing/BillingPage'));
 const KeysPage = lazy(() => import('./pages/keys/KeysPage'));
 const DocsPage = lazy(() => import('./pages/keys/DocsPage'));
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/create/image" element={<CreateStudioPage />} />
             <Route path="/create/text" element={<CreateStudioPage />} />
             <Route path="/create/video" element={<CreateStudioPage />} />
+            <Route path="/inspire" element={<InspirePage />} />
             <Route path="/docs" element={<DocsPage />} />
 
             {/* 受保护：未登录将弹浮层并退回首页 */}
